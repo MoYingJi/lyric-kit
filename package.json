@@ -1,6 +1,6 @@
 {
   "name": "lyric-kit",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "A lightweight, zero-dependency toolkit for parsing, serializing, and processing lyrics across multiple formats (LRC, TTML, QRC, YRC, KRC, LyS, SRT, ASS).",
   "type": "module",
   "packageManager": "pnpm@11.21.0",

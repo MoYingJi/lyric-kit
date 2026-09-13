@@ -91,6 +91,25 @@ describe("parseQRC", () => {
     expect(lines[0].words.map((w) => w.word).join("")).toBe("原文");
   });
 
+  it("当 QRC 歌词文本中包含未转义的英文双引号时，不应提前截断歌词", () => {
+    const xml = `<?xml version="1.0" encoding="utf-8"?>
+<QrcInfos LyricCount="1">
+  <Lyric_1 LyricType="1" LyricContent="[ti:测试歌曲]
+[0,1000]前(0,500)奏(500,500)
+[1000,1000]测(1000,500)试&quot;(1500,0)转(1500,250)义&quot;(1750,250)
+[2000,1000]测(2000,500)试"(2500,0)引(2500,250)号"(2750,250)
+[3000,1000]结(3000,500)尾(3500,500)
+"/>
+</QrcInfos>`;
+    const { lines } = parseQRC(xml);
+
+    expect(lines).toHaveLength(4);
+    expect(lines[0].words.map((w) => w.word).join("")).toBe("前奏");
+    expect(lines[1].words.map((w) => w.word).join("")).toBe('测试"转义"');
+    expect(lines[2].words.map((w) => w.word).join("")).toBe('测试"引号"');
+    expect(lines[3].words.map((w) => w.word).join("")).toBe("结尾");
+  });
+
   it("应支持 QRC 逐字歌词首行附属背景行与制作人元数据完整清洗", () => {
     const xml = `<?xml version="1.0" encoding="utf-8"?>
 <QrcInfos>

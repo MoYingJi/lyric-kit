@@ -76,10 +76,10 @@ const extractFromXml = (text: string): { content: string; xmlMeta?: LyricMetadat
 
   const cdataMatch = text.match(/<!\[CDATA\[([\s\S]*?)\]\]>/);
   if (cdataMatch) return { content: cdataMatch[1], xmlMeta };
-  const attrMatch = text.match(/LyricContent="([^"]*)"/);
-  if (attrMatch) return { content: decodeXmlEntities(attrMatch[1]), xmlMeta };
   const multiLineMatch = text.match(/LyricContent="([\s\S]*?)"\s*\/?>/);
   if (multiLineMatch) return { content: decodeXmlEntities(multiLineMatch[1]), xmlMeta };
+  const attrMatch = text.match(/LyricContent="([^"]*)"/);
+  if (attrMatch) return { content: decodeXmlEntities(attrMatch[1]), xmlMeta };
   return { content: text, xmlMeta };
 };
 
