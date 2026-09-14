@@ -60,6 +60,23 @@ describe("parseQRC", () => {
     expect(lines[0].words[1].endsWithSpace).toBeUndefined();
   });
 
+  it("应将独立空白词标记到前一个词的 endsWithSpace", () => {
+    const text = `[1000,3000]Hello(1000,1000) (2000,1000)World(3000,1000)`;
+    const { lines } = parseQRC(text);
+
+    expect(lines).toHaveLength(1);
+    expect(lines[0].words).toHaveLength(2);
+    expect(lines[0].words[0]).toEqual({
+      word: "Hello",
+      startTime: 1000,
+      endTime: 2000,
+      endsWithSpace: true,
+    });
+    expect(lines[0].words[0].endsWithSpace).toBe(true);
+    expect(lines[0].words[1]).toEqual({ word: "World", startTime: 3000, endTime: 4000 });
+    expect(lines[0].words[1].endsWithSpace).toBeUndefined();
+  });
+
   it("应支持 XML 实体反转义（&#10; 换行与 &quot; 等）", () => {
     const xml = `<QrcInfos Title="&quot;晴天&quot;" Singer="周杰伦 &amp; 朋友"><Lyric_1 LyricContent="[1000,1000]晴(1000,500)天(1500,500)&#10;[2000,1000]阴(2000,500)天(2500,500)"/></QrcInfos>`;
     const { lines, metadata } = parseQRC(xml, { extractMetadata: true });

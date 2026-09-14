@@ -78,9 +78,7 @@ const parseBracketWordTags = (
     const time = parseTime(match[1], match[2], match[3]);
     tagCount++;
     const rawWord = lineContent.slice(prevTextStart, match.index);
-    if (rawWord.trim().length > 0) {
-      pushCleanWord(words, rawWord, prevTime, time);
-    }
+    pushCleanWord(words, rawWord, prevTime, time);
     prevTime = time;
     prevTextStart = BRACKET_TIME_RE.lastIndex;
   }
@@ -89,9 +87,7 @@ const parseBracketWordTags = (
 
   if (prevTextStart < lineContent.length) {
     const rawWord = lineContent.slice(prevTextStart);
-    if (rawWord.trim().length > 0) {
-      pushCleanWord(words, rawWord, prevTime, 0);
-    }
+    pushCleanWord(words, rawWord, prevTime, 0);
   }
 
   return words;

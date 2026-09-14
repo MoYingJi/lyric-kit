@@ -40,6 +40,22 @@ describe("parseLyS", () => {
     expect(bgDisabledResult.lines[1].isBG).toBe(false);
   });
 
+  it("应将独立空白词标记到前一个词的 endsWithSpace", () => {
+    const text = `[0]Hello(1000,1000) (2000,1000)World(3000,1000)`;
+    const { lines } = parseLyS(text);
+
+    expect(lines[0].startTime).toBe(1000);
+    expect(lines[0].endTime).toBe(4000);
+    expect(lines[0].words).toHaveLength(2);
+    expect(lines[0].words[0]).toEqual({
+      word: "Hello",
+      startTime: 1000,
+      endTime: 2000,
+      endsWithSpace: true,
+    });
+    expect(lines[0].words[1]).toEqual({ word: "World", startTime: 3000, endTime: 4000 });
+  });
+
   it("应支持提取 LyS 头部元数据标签", () => {
     const text = `[ti:测试歌曲]\n[ar:测试歌手]\n[0]第一句(1000,1000)`;
     const { lines, metadata } = parseLyS(text, { extractMetadata: true });
