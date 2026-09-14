@@ -18,7 +18,12 @@ export const pushCleanWord = (
   const endsWithSpace = /\s$/.test(rawWord);
   const cleanWord = rawWord.trim();
 
-  if (!cleanWord) return false;
+  if (!cleanWord) {
+    if (rawWord && words.length > 0) {
+      words[words.length - 1].endsWithSpace = true;
+    }
+    return false;
+  }
 
   if (startsWithSpace && words.length > 0) {
     words[words.length - 1].endsWithSpace = true;

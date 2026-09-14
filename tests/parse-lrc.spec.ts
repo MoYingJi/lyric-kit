@@ -114,6 +114,38 @@ describe("parseLRC", () => {
     expect(lines[0].words[1].endsWithSpace).toBeUndefined();
   });
 
+  it("应将尖括号格式的独立空白词标记到前一个词", () => {
+    const text = `[00:01.00]<00:01.00>Hello<00:01.50> <00:02.00>World<00:02.50>`;
+    const { lines } = parseLRC(text);
+
+    expect(lines[0].startTime).toBe(1000);
+    expect(lines[0].endTime).toBe(2500);
+    expect(lines[0].words).toHaveLength(2);
+    expect(lines[0].words[0]).toEqual({
+      word: "Hello",
+      startTime: 1000,
+      endTime: 2000,
+      endsWithSpace: true,
+    });
+    expect(lines[0].words[1]).toEqual({ word: "World", startTime: 2000, endTime: 2500 });
+  });
+
+  it("应将方括号格式的独立空白词标记到前一个词", () => {
+    const text = `[00:01.00]Hello[00:01.50] [00:02.00]World[00:02.50]`;
+    const { lines } = parseLRC(text);
+
+    expect(lines[0].startTime).toBe(1000);
+    expect(lines[0].endTime).toBe(2500);
+    expect(lines[0].words).toHaveLength(2);
+    expect(lines[0].words[0]).toEqual({
+      word: "Hello",
+      startTime: 1000,
+      endTime: 1500,
+      endsWithSpace: true,
+    });
+    expect(lines[0].words[1]).toEqual({ word: "World", startTime: 2000, endTime: 2500 });
+  });
+
   it("最后一行未提供结束时间时，应回退为 +8000ms 而非 16.7 小时", () => {
     const text = `[00:10.00]只有一句歌词`;
     const { lines } = parseLRC(text);

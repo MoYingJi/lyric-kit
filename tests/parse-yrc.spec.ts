@@ -46,6 +46,22 @@ describe("parseYRC", () => {
     expect(lines[0].words[1].endsWithSpace).toBeUndefined();
   });
 
+  it("应将独立空白词标记到前一个词的 endsWithSpace", () => {
+    const text = `[0,2000](0,500,0)Hello(500,500,0) (1000,500,0)World`;
+    const { lines } = parseYRC(text);
+
+    expect(lines[0].startTime).toBe(0);
+    expect(lines[0].endTime).toBe(2000);
+    expect(lines[0].words).toHaveLength(2);
+    expect(lines[0].words[0]).toEqual({
+      word: "Hello",
+      startTime: 0,
+      endTime: 500,
+      endsWithSpace: true,
+    });
+    expect(lines[0].words[1]).toEqual({ word: "World", startTime: 1000, endTime: 1500 });
+  });
+
   it("应支持提取网易云首行 JSON 格式词曲元数据", () => {
     const text = `[0,0]{"t":0,"c":[{"tx":"作词 : 方文山"},{"tx":"作曲 : 周杰伦"},{"tx":"歌手 : 周杰伦"}]}\n[100,1000](100,500,0)A(600,500,0)B`;
     const { lines, metadata } = parseYRC(text, { extractMetadata: true });

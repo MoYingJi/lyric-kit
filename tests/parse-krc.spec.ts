@@ -58,6 +58,22 @@ describe("parseKRC", () => {
     expect(lines[0].words[1].endsWithSpace).toBeUndefined();
   });
 
+  it("应将独立空白词标记到前一个词的 endsWithSpace", () => {
+    const text = `[00:01.000]<0,500>Hello<500,500> <1000,500>World`;
+    const { lines } = parseKRC(text);
+
+    expect(lines[0].startTime).toBe(1000);
+    expect(lines[0].endTime).toBe(2500);
+    expect(lines[0].words).toHaveLength(2);
+    expect(lines[0].words[0]).toEqual({
+      word: "Hello",
+      startTime: 1000,
+      endTime: 1500,
+      endsWithSpace: true,
+    });
+    expect(lines[0].words[1]).toEqual({ word: "World", startTime: 2000, endTime: 2500 });
+  });
+
   it("应支持解析酷狗 [language:...] 中的 Base64 翻译与音译", () => {
     const payload = {
       content: [
