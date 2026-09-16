@@ -10,6 +10,7 @@ import type {
   TTMLAgent,
   TTMLPlatformId,
 } from "../types";
+import { pickLangIndex } from "../utils/pickLanguage";
 import { alignRomanization } from "../utils/roman";
 import { parseTTMLTime } from "../utils/timestamp";
 
@@ -111,38 +112,6 @@ const stripParens = (text: string): string =>
     .replace(/^[(（]+/, "")
     .replace(/[)）]+$/, "")
     .trim();
-
-/**
- * 规范化 BCP-47 语言代码标签
- * @param lang - 原始语言字符串
- * @returns 小写短横线分隔的规范语言标签
- */
-const normalizeLang = (lang: string | null | undefined): string =>
-  (lang ?? "").toLowerCase().replace(/_/g, "-");
-
-/**
- * 根据偏好语言从多语言候选列表中挑选最优匹配索引
- * @param langs - 候选语言代码列表
- * @param preferred - 偏好语言代码
- * @returns 最优匹配的索引，无匹配返回 -1
- */
-const pickLangIndex = (langs: (string | null)[], preferred: string): number => {
-  if (langs.length === 0) return -1;
-  const want = normalizeLang(preferred);
-  if (!want) return 0;
-  const wantBase = want.split("-")[0];
-  let baseMatch = -1;
-  let hasTagged = false;
-  for (let index = 0; index < langs.length; index++) {
-    const lang = normalizeLang(langs[index]);
-    if (!lang) continue;
-    hasTagged = true;
-    if (lang === want) return index;
-    if (baseMatch === -1 && lang.split("-")[0] === wantBase) baseMatch = index;
-  }
-  if (baseMatch !== -1) return baseMatch;
-  return hasTagged ? -1 : 0;
-};
 
 /**
  * 获取 XML 元素的属性值，依次尝试命名空间、回退名称与本地名称
