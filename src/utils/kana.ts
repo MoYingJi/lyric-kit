@@ -1,7 +1,11 @@
 import type { LyricLine, LyricSpan, LyricWord } from "../types";
 
-/** 匹配汉字（包含 CJK 统一表意文字、扩展 A、日文汉字叠字 々 与符号 〆） */
-const KANJI_REGEX = /[\u4e00-\u9fff\u3400-\u4dbf\u3005\u3006]/;
+/**
+ * 匹配可被 kana 注音的基础字符
+ *
+ * 包含 CJK 统一表意文字、扩展 A、日文汉字叠字 々 与符号 〆 以及数字 0-9
+ */
+const KANA_BASE_REGEX = /[\u4e00-\u9fff\u3400-\u4dbf\u3005\u30060-9]/;
 
 /** 单个假名注音单元 */
 export interface KanaUnit {
@@ -108,7 +112,7 @@ export const applyKanaToLines = (lines: LyricLine[], rawKanaTag: string): void =
       const currentWord = currentLine.words[wordIndex];
       const wordText = currentWord.word;
       for (let charIndex = 0; charIndex < wordText.length; charIndex++) {
-        if (KANJI_REGEX.test(wordText[charIndex])) {
+        if (KANA_BASE_REGEX.test(wordText[charIndex])) {
           kanjiLocations.push({
             charIndexInWord: charIndex,
             wordRef: currentWord,
