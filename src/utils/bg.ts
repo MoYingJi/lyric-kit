@@ -20,7 +20,7 @@ const HAN_RE = /\p{Script=Han}/u;
 const KANA_ONLY_RE = /^[\p{Script=Hiragana}\p{Script=Katakana}\u30fc\s]+$/u;
 
 /**
- * 拼接单词数组为纯文本字符串（保留 endsWithSpace 空格）
+ * 拼接单词数组为纯文本字符串
  * @param words - 歌词单词数组
  * @returns 拼接后的纯文本
  */

@@ -78,7 +78,7 @@ const clearResult = (): void => {
 
 const lineMainText = (line: LyricLine): string =>
   line.words
-    .map((w) => w.word + (w.endsWithSpace ? " " : ""))
+    .map((w) => w.word)
     .join("")
     .trim();
 
@@ -204,7 +204,6 @@ const renderLineDetail = (line: LyricLine): HTMLElement => {
       "<table class='word-table'><thead><tr><th>词</th><th>起始</th><th>结束</th><th>时长</th><th>音译</th><th>注音</th><th>标记</th></tr></thead><tbody>";
     for (const word of line.words) {
       const flags: string[] = [];
-      if (word.endsWithSpace) flags.push("后接空格");
       if (word.obscene) flags.push("不雅");
       if (word.emptyBeat) flags.push(`空拍×${word.emptyBeat}`);
       const ruby = (word.ruby ?? []).map((r) => r.word).join(" ");

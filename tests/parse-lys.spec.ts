@@ -27,33 +27,32 @@ describe("parseLyS", () => {
     expect(lines[2].isDuet).toBe(false);
   });
 
-  it("应支持西文空格 endsWithSpace 与括号启发式背景检测", () => {
+  it("应支持西文空格与括号启发式背景检测", () => {
     const text = `[0]Hello (1000,1000)World(2000,1000)
 [0](和声部分)(3000,1000)`;
 
     const defaultResult = parseLyS(text);
-    expect(defaultResult.lines[0].words[0].word).toBe("Hello");
-    expect(defaultResult.lines[0].words[0].endsWithSpace).toBe(true);
+    expect(defaultResult.lines[0].words[0].word).toBe("Hello ");
     expect(defaultResult.lines[1].isBG).toBe(true);
 
     const bgDisabledResult = parseLyS(text, { detectBackground: false });
     expect(bgDisabledResult.lines[1].isBG).toBe(false);
   });
 
-  it("应将独立空白词标记到前一个词的 endsWithSpace", () => {
+  it("应保留独立空白词", () => {
     const text = `[0]Hello(1000,1000) (2000,1000)World(3000,1000)`;
     const { lines } = parseLyS(text);
 
     expect(lines[0].startTime).toBe(1000);
     expect(lines[0].endTime).toBe(4000);
-    expect(lines[0].words).toHaveLength(2);
+    expect(lines[0].words).toHaveLength(3);
     expect(lines[0].words[0]).toEqual({
       word: "Hello",
       startTime: 1000,
       endTime: 2000,
-      endsWithSpace: true,
     });
-    expect(lines[0].words[1]).toEqual({ word: "World", startTime: 3000, endTime: 4000 });
+    expect(lines[0].words[1]).toEqual({ word: " ", startTime: 2000, endTime: 3000 });
+    expect(lines[0].words[2]).toEqual({ word: "World", startTime: 3000, endTime: 4000 });
   });
 
   it("应支持提取 LyS 头部元数据标签", () => {

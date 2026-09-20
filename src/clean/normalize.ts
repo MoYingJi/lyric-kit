@@ -20,36 +20,11 @@ const findNextMain = (lines: LyricLine[], from: number): number => {
  * @returns 无返回值（原地修改）
  */
 export const normalizeLyricLines = (lines: LyricLine[]): void => {
-  // 规范化空格与提炼 endsWithSpace
+  // 规范化空格
   for (const line of lines) {
-    const cleanedWords: typeof line.words = [];
-    for (let wIdx = 0; wIdx < line.words.length; wIdx++) {
-      const word = line.words[wIdx];
-      const rawText = word.word;
-      if (!rawText.trim()) {
-        if (cleanedWords.length > 0) {
-          cleanedWords[cleanedWords.length - 1].endsWithSpace = true;
-        }
-        continue;
-      }
-
-      const startsWithSpace = /^\s/.test(rawText);
-      const endsWithSpace = /\s$/.test(rawText) || word.endsWithSpace;
-      const cleanWord = rawText.trim().replace(/\s+/g, " ");
-
-      if (startsWithSpace && cleanedWords.length > 0) {
-        cleanedWords[cleanedWords.length - 1].endsWithSpace = true;
-      }
-
-      word.word = cleanWord;
-      word.endsWithSpace = endsWithSpace || undefined;
-      cleanedWords.push(word);
+    for (const word of line.words) {
+      word.word = word.word.replace(/\s+/g, " ");
     }
-
-    if (cleanedWords.length > 0) {
-      delete cleanedWords[cleanedWords.length - 1].endsWithSpace;
-    }
-    line.words = cleanedWords;
   }
 
   // 同步行/词时间戳

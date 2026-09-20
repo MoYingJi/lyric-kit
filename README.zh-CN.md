@@ -215,7 +215,6 @@ interface LyricWord {
   romanWord?: string; // 逐字罗马音/拼音音译 (如 "kai", "zeoi")
   ruby?: LyricSpan[]; // 振假名/注音跨度数组 (如日文假名 "かい")
   obscene?: boolean;
-  endsWithSpace?: boolean;
   emptyBeat?: number;
 }
 

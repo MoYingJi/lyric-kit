@@ -124,7 +124,7 @@ describe("多轨逐字歌词解析集成 (parseLyric with romaji)", () => {
     const targetLine = result.lines[0];
 
     // 整行罗马音
-    expect(targetLine.romanLyric).toBe("subarashikisekaini");
+    expect(targetLine.romanLyric).toBe("su ba ra shi ki se ka i ni");
 
     // 逐字音节
     expect(targetLine.words).toHaveLength(8);

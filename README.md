@@ -215,7 +215,6 @@ interface LyricWord {
   romanWord?: string; // Per-word romanization/pinyin syllable (e.g. "kai", "zeoi")
   ruby?: LyricSpan[]; // Furigana/ruby spans (e.g. Japanese kana "かい")
   obscene?: boolean;
-  endsWithSpace?: boolean;
   emptyBeat?: number;
 }
 

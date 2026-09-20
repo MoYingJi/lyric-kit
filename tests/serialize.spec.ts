@@ -64,13 +64,13 @@ describe("serialize", () => {
     expect(serializeLyric(mockLines, "srt")).toBe(toSRT(mockLines));
   });
 
-  it("toEnhancedLRC 应正确导出 endsWithSpace 词间空格", () => {
+  it("toEnhancedLRC 应正确导出词间空格", () => {
     const lines: LyricLine[] = [
       {
         startTime: 1000,
         endTime: 3000,
         words: [
-          { startTime: 1000, endTime: 2000, word: "Hello", endsWithSpace: true },
+          { startTime: 1000, endTime: 2000, word: "Hello " },
           { startTime: 2000, endTime: 3000, word: "World" },
         ],
         translatedLyric: "",
@@ -83,13 +83,13 @@ describe("serialize", () => {
     expect(elrc).toBe("[00:01.00]<00:01.00>Hello <00:02.00>World");
   });
 
-  it("toSRT 应正确导出 endsWithSpace 词间空格，防止西文单词粘连", () => {
+  it("toSRT 应正确导出词间空格，防止西文单词粘连", () => {
     const lines: LyricLine[] = [
       {
         startTime: 1000,
         endTime: 3000,
         words: [
-          { startTime: 1000, endTime: 2000, word: "Hello", endsWithSpace: true },
+          { startTime: 1000, endTime: 2000, word: "Hello " },
           { startTime: 2000, endTime: 3000, word: "World" },
         ],
         translatedLyric: "",
@@ -103,7 +103,7 @@ describe("serialize", () => {
     expect(srt).not.toContain("HelloWorld");
   });
 
-  it("toTTML 应支持导出 tts:ruby、songPart、endsWithSpace 与 AMLL 特性", () => {
+  it("toTTML 应支持导出 tts:ruby、songPart 与 AMLL 特性", () => {
     const lines: LyricLine[] = [
       {
         startTime: 1000,
@@ -113,12 +113,11 @@ describe("serialize", () => {
           {
             startTime: 1000,
             endTime: 2000,
-            word: "漢字",
+            word: "漢字 ",
             ruby: [
               { word: "かん", startTime: 1000, endTime: 1500 },
               { word: "じ", startTime: 1500, endTime: 2000 },
             ],
-            endsWithSpace: true,
           },
           {
             startTime: 2000,

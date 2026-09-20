@@ -41,10 +41,6 @@ const parseYrcWords = (rest: string): LyricWord[] => {
     pushCleanWord(words, rawWord, curr.start, curr.start + curr.dur);
   }
 
-  if (words.length > 0) {
-    delete words[words.length - 1].endsWithSpace;
-  }
-
   return words;
 };
 

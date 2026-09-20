@@ -63,7 +63,7 @@ describe("parseTTML", () => {
     expect(lines[0].translatedLyric).toBe("你好世界");
   });
 
-  it("应正确解析西文词间空格标记 endsWithSpace", () => {
+  it("应正确解析西文词间空格", () => {
     const xml = `<?xml version="1.0" encoding="utf-8"?>
 <tt xmlns="http://www.w3.org/ns/ttml">
   <body>
@@ -78,10 +78,8 @@ describe("parseTTML", () => {
     const { lines } = parseTTML(xml);
     expect(lines).toHaveLength(1);
     expect(lines[0].words).toHaveLength(2);
-    expect(lines[0].words[0].word).toBe("Hello");
-    expect(lines[0].words[0].endsWithSpace).toBe(true);
+    expect(lines[0].words[0].word).toBe("Hello ");
     expect(lines[0].words[1].word).toBe("World");
-    expect(lines[0].words[1].endsWithSpace).toBeUndefined();
   });
 
   it("应解析 W3C TTML2 tts:ruby 容器（汉字与假名注音时间）", () => {

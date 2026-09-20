@@ -22,8 +22,6 @@ const escapeXml = (text: string): string =>
 const singleWordSpan = (word: LyricWord): string => {
   const obsceneAttr = word.obscene ? ' amll:obscene="true"' : "";
   const emptyBeatAttr = word.emptyBeat !== undefined ? ` amll:empty-beat="${word.emptyBeat}"` : "";
-  const trailingSpace = word.endsWithSpace ? " " : "";
-
   if (word.ruby && word.ruby.length > 0) {
     const rubySpans = word.ruby
       .map(
@@ -32,10 +30,10 @@ const singleWordSpan = (word: LyricWord): string => {
       )
       .join("");
 
-    return `<span tts:ruby="container"${obsceneAttr}${emptyBeatAttr}><span tts:ruby="base">${escapeXml(word.word)}</span><span tts:ruby="textContainer">${rubySpans}</span></span>${trailingSpace}`;
+    return `<span tts:ruby="container"${obsceneAttr}${emptyBeatAttr}><span tts:ruby="base">${escapeXml(word.word)}</span><span tts:ruby="textContainer">${rubySpans}</span></span>`;
   }
 
-  return `<span begin="${formatTtmlTime(word.startTime)}" end="${formatTtmlTime(word.endTime)}"${obsceneAttr}${emptyBeatAttr}>${escapeXml(word.word)}</span>${trailingSpace}`;
+  return `<span begin="${formatTtmlTime(word.startTime)}" end="${formatTtmlTime(word.endTime)}"${obsceneAttr}${emptyBeatAttr}>${escapeXml(word.word)}</span>`;
 };
 
 /**

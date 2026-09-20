@@ -132,10 +132,6 @@ export const parseKRC = (text: string, options: ParseOptions = {}): LyricResult 
       lastEnd = Math.max(lastEnd, end);
     }
 
-    if (words.length > 0) {
-      delete words[words.length - 1].endsWithSpace;
-    }
-
     if (words.length === 0) continue;
 
     const calculatedEnd = lineDur > 0 ? lineStart + lineDur : lastEnd;

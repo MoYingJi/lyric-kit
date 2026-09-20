@@ -47,11 +47,7 @@ export const toEnhancedLRC = (lines: LyricLine[]): string => {
   for (const line of lines) {
     if (line.words.length === 0) continue;
     const lineTs = `[${formatLrcTime(line.startTime)}]`;
-    let body = line.words
-      .map(
-        (word) => `<${formatLrcTime(word.startTime)}>${word.word}${word.endsWithSpace ? " " : ""}`,
-      )
-      .join("");
+    let body = line.words.map((word) => `<${formatLrcTime(word.startTime)}>${word.word}`).join("");
     if (!body.trim()) continue;
     if (line.isBG) body = formatBgText(body);
     out.push(`${lineTs}${body}`);

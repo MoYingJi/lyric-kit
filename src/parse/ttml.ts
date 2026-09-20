@@ -85,8 +85,6 @@ const Values = {
   RubyText: "text",
 } as const;
 
-const LEADING_SPACE_RE = /^\s/;
-const TRAILING_SPACE_RE = /\s$/;
 const MULTI_SPACE_RE = /\s+/g;
 
 /**
@@ -368,7 +366,6 @@ const parseHead = (
                 const clean = normalized.trim();
                 const beginAttr = getAttr(childEl, NS.XML, Attributes.Begin);
                 const endAttr = getAttr(childEl, NS.XML, Attributes.End);
-                const endsWithSpace = TRAILING_SPACE_RE.test(normalized);
 
                 if (isBg) {
                   bgText += raw;
@@ -378,8 +375,8 @@ const parseHead = (
                       const sp = innerSpans[spanIndex];
                       const spB = getAttr(sp, NS.XML, Attributes.Begin);
                       const spE = getAttr(sp, NS.XML, Attributes.End);
-                      const spClean = stripParens(normalizeText(sp.textContent ?? ""));
-                      if (spB && spE && spClean) {
+                      const spClean = stripParens(normalizeText(sp.textContent ?? "", false));
+                      if (spB && spE && spClean.trim()) {
                         bgWords.push({
                           word: spClean,
                           startTime: parseTTMLTime(spB),
@@ -389,10 +386,9 @@ const parseHead = (
                     }
                   } else if (beginAttr && endAttr && clean) {
                     bgWords.push({
-                      word: stripParens(clean),
+                      word: stripParens(normalized),
                       startTime: parseTTMLTime(beginAttr),
                       endTime: parseTTMLTime(endAttr),
-                      endsWithSpace: endsWithSpace || undefined,
                     });
                   }
                 } else {
@@ -404,22 +400,20 @@ const parseHead = (
                       const spB = getAttr(sp, NS.XML, Attributes.Begin);
                       const spE = getAttr(sp, NS.XML, Attributes.End);
                       const spRaw = sp.textContent ?? "";
-                      const spClean = normalizeText(spRaw).trim();
-                      if (spB && spE && spClean) {
+                      const spClean = normalizeText(spRaw, false);
+                      if (spB && spE && spClean.trim()) {
                         mainWords.push({
                           word: spClean,
                           startTime: parseTTMLTime(spB),
                           endTime: parseTTMLTime(spE),
-                          endsWithSpace: TRAILING_SPACE_RE.test(spRaw) || undefined,
                         });
                       }
                     }
                   } else if (beginAttr && endAttr && clean) {
                     mainWords.push({
-                      word: clean,
+                      word: normalized,
                       startTime: parseTTMLTime(beginAttr),
                       endTime: parseTTMLTime(endAttr),
-                      endsWithSpace: endsWithSpace || undefined,
                     });
                   }
                 }
@@ -574,7 +568,7 @@ export const parseTTML = (text: string, options: ParseOptions = {}): LyricResult
 
         if (!isFormatting && normalizedWText.length > 0 && normalizedWText.trim().length === 0) {
           if (state.words.length > 0) {
-            state.words[state.words.length - 1].endsWithSpace = true;
+            state.words[state.words.length - 1].word += normalizedWText;
           }
         }
       } else if (node.nodeType === 1) {
@@ -629,21 +623,12 @@ export const parseTTML = (text: string, options: ParseOptions = {}): LyricResult
               endTime = Math.max(...rubyTags.map((ruby) => ruby.endTime));
             }
 
-            const cleanBaseText = baseText.trim();
-            if (cleanBaseText.length > 0) {
-              const endsWithSpace = TRAILING_SPACE_RE.test(baseText);
-              const startsWithSpace = LEADING_SPACE_RE.test(baseText);
-
-              if (startsWithSpace && state.words.length > 0) {
-                state.words[state.words.length - 1].endsWithSpace = true;
-              }
-
+            if (baseText.trim().length > 0) {
               state.words.push({
-                word: cleanBaseText,
+                word: baseText,
                 startTime,
                 endTime,
                 ruby: rubyTags.length > 0 ? rubyTags : undefined,
-                endsWithSpace: endsWithSpace || undefined,
                 obscene: isObscene ? true : undefined,
                 emptyBeat,
               });
@@ -766,25 +751,13 @@ export const parseTTML = (text: string, options: ParseOptions = {}): LyricResult
 
           if (wBegin && wEnd) {
             const isFormatting = rawWText.includes("\n");
-            let startsWithSpace = false;
-            let endsWithSpace = false;
+            const cleanText = isFormatting ? normalizedWText.trim() : normalizedWText;
 
-            if (!isFormatting) {
-              startsWithSpace = LEADING_SPACE_RE.test(normalizedWText);
-              endsWithSpace = TRAILING_SPACE_RE.test(normalizedWText);
-            }
-
-            const cleanText = normalizedWText.trim();
-            if (startsWithSpace && state.words.length > 0) {
-              state.words[state.words.length - 1].endsWithSpace = true;
-            }
-
-            if (cleanText.length > 0) {
+            if (cleanText.trim().length > 0) {
               state.words.push({
                 word: cleanText,
                 startTime: parseTTMLTime(wBegin),
                 endTime: parseTTMLTime(wEnd),
-                endsWithSpace: endsWithSpace || undefined,
                 obscene: isObscene ? true : undefined,
                 emptyBeat,
               });
@@ -798,7 +771,6 @@ export const parseTTML = (text: string, options: ParseOptions = {}): LyricResult
       state.words[0].word = state.words[0].word.trimStart();
       const last = state.words[state.words.length - 1];
       last.word = last.word.trimEnd();
-      delete last.endsWithSpace;
     }
 
     return state;

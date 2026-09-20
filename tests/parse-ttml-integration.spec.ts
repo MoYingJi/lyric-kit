@@ -200,10 +200,9 @@ describe("AMLL TTML 对齐集成测试", () => {
       romanWord: "Ko",
     });
     expect(l1.words[1]).toEqual({
-      word: "は",
+      word: "は ",
       startTime: 10500,
       endTime: 10800,
-      endsWithSpace: true,
       romanWord: "re",
     });
     expect(l1.words[2]).toEqual({
@@ -224,9 +223,9 @@ describe("AMLL TTML 对齐集成测试", () => {
     expect(l2.endTime).toBe(17000);
     expect(l2.translatedLyric).toBe("这是第二行歌词 (演唱者B)");
     expect(l2.words).toHaveLength(3);
-    expect(l2.words[0].endsWithSpace).toBe(true);
-    expect(l2.words[1].endsWithSpace).toBe(true);
-    expect(l2.words[2].endsWithSpace).toBeUndefined();
+    expect(l2.words[0].word).toBe("二つ目 ");
+    expect(l2.words[1].word).toBe("の ");
+    expect(l2.words[2].word).toBe("ライン");
 
     // L3 行（主唱行）
     const l3 = lines[2];
@@ -236,8 +235,7 @@ describe("AMLL TTML 对齐集成测试", () => {
     expect(l3.agentId).toBe("v1000");
     expect(l3.startTime).toBe(20000);
     expect(l3.endTime).toBe(25000);
-    expect(l3.words[0].word).toBe("コーラス");
-    expect(l3.words[0].endsWithSpace).toBe(true);
+    expect(l3.words[0].word).toBe("コーラス ");
     expect(l3.words[1].word).toBe("です");
 
     // L3 背景行
@@ -347,6 +345,6 @@ describe("AMLL TTML 对齐集成测试", () => {
     expect(lines[1].words[0].word).toBe("你");
     expect(lines[1].words[lines[1].words.length - 1].word).toBe("红");
     const fullBgText = lines[1].words.map((word) => word.word).join("");
-    expect(fullBgText).toBe("你惹尘埃八千里外云和月被断章晕红");
+    expect(fullBgText).toBe("你惹尘埃 八千里外 云和月被断章晕红");
   });
 });

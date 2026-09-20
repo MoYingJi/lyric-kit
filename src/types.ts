@@ -26,12 +26,6 @@ export interface LyricWord extends LyricSpan {
   /** 注音列表（如日语假名、拼音标注） */
   ruby?: LyricSpan[];
   /**
-   * 该音节结尾是否紧跟空格（用于西文/英文排版与卡拉OK渲染）
-   * 单词本身保持纯净（trim），由该属性控制词间空格
-   * @default false
-   */
-  endsWithSpace?: boolean;
-  /**
    * 空拍数量（用于前奏/间奏打拍动效）
    * @default 0
    */

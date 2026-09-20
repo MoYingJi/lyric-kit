@@ -122,7 +122,7 @@ describe("netease YRC 纯音乐（负数 t 元数据）", () => {
 
     const words = lines[0].words;
     expect(words[0]).toMatchObject({ word: "出", startTime: 0, endTime: 14740 });
-    expect(words[2]).toMatchObject({ word: "Produced" });
+    expect(words[2]).toMatchObject({ word: "Produced " });
     expect(words[words.length - 1]).toMatchObject({ word: "MiX", endTime: 117990 });
 
     // 作曲/编曲均归入 songwriters；负数 t 不影响解析
@@ -223,7 +223,7 @@ describe("真实 TTML 语料", () => {
     const bgLine = lines.find((line) => line.isBG);
     expect(bgLine).toBeDefined();
     const bgText = bgLine?.words.map((w) => w.word).join("");
-    expect(bgText).toBe("长奔跑的脚踝到底是为什么");
+    expect(bgText).toBe("长奔跑的脚踝 到底是为什么");
 
     // m:ss.xxx 混合时间格式（1:01.680 → 61680ms）
     const luPai = lines.find((line) =>
@@ -249,13 +249,13 @@ describe("真实 TTML 语料", () => {
     expect(lines[0].translatedLyric).toBe("当曾经的挚友离开");
     expect(lines[1].translatedLyric).toBe("「你是世界上的美好，永远闪耀」");
 
-    // 西文单词含词间空格标记（"s are" 连写词 + endsWithSpace）
+    // 西文单词保留空格
     const words = lines[0].words;
-    expect(words.some((w) => w.word === "s are")).toBe(true);
-    expect(words[0].endsWithSpace).toBe(true);
+    expect(words.some((w) => w.word === "s are ")).toBe(true);
+    expect(words[0].word).toBe("When ");
 
     // amll:empty-beat 保留到词属性
-    const emptyBeatWord = lines[1].words.find((w) => w.word === "world,");
+    const emptyBeatWord = lines[1].words.find((w) => w.word.trim() === "world,");
     expect(emptyBeatWord?.emptyBeat).toBe(4);
 
     // amll:meta 元数据
@@ -278,8 +278,8 @@ describe("qqmusic QRC XML 包裹", () => {
     expect(first.startTime).toBe(0);
     expect(first.words[0]).toMatchObject({ word: "如", startTime: 0, endTime: 289 });
     expect(first.words[1]).toMatchObject({ word: "烟", startTime: 289, endTime: 578 });
-    // 括号伴唱文本 ((Mayday)) 被背景人声检测拆分为独立 isBG 行，主行保留如烟-五月天
-    expect(first.words.map((w) => w.word).join("")).toBe("如烟-五月天");
+    // 括号伴唱文本 ((Mayday)) 被背景人声检测拆分为独立 isBG 行，主行保留如烟 - 五月天
+    expect(first.words.map((w) => w.word).join("")).toBe("如烟 - 五月天 ");
     const bgLine = lines.find((line) => line.isBG);
     expect(bgLine).toBeDefined();
     expect(bgLine?.words.map((w) => w.word).join("")).toContain("Mayday");
@@ -289,7 +289,7 @@ describe("qqmusic QRC XML 包裹", () => {
     const { lines } = parseLyric(QQ_QRC_XML);
     const first = lines.find((line) => !line.isBG);
     expect(first).toBeDefined();
-    expect(first?.words.map((w) => w.word).join("")).toBe("如烟-五月天");
+    expect(first?.words.map((w) => w.word).join("")).toBe("如烟 - 五月天 ");
     // stripLyricMetadata 对词/曲署名行的清理走 anchored 规则，主歌词行不受影响
     const stripped = stripLyricMetadata(lines);
     const kept = stripped.find((line) =>

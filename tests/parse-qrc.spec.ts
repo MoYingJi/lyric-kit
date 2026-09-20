@@ -48,33 +48,29 @@ describe("parseQRC", () => {
     expect(lines[0].isBG).toBe(false);
   });
 
-  it("应正确解析西文词间空格标记 endsWithSpace", () => {
+  it("应正确解析西文词间空格", () => {
     const text = `[1000,2000]Hello (1000,1000)World(2000,1000)`;
     const { lines } = parseQRC(text);
 
     expect(lines).toHaveLength(1);
     expect(lines[0].words).toHaveLength(2);
-    expect(lines[0].words[0].word).toBe("Hello");
-    expect(lines[0].words[0].endsWithSpace).toBe(true);
+    expect(lines[0].words[0].word).toBe("Hello ");
     expect(lines[0].words[1].word).toBe("World");
-    expect(lines[0].words[1].endsWithSpace).toBeUndefined();
   });
 
-  it("应将独立空白词标记到前一个词的 endsWithSpace", () => {
+  it("应保留独立空白词", () => {
     const text = `[1000,3000]Hello(1000,1000) (2000,1000)World(3000,1000)`;
     const { lines } = parseQRC(text);
 
     expect(lines).toHaveLength(1);
-    expect(lines[0].words).toHaveLength(2);
+    expect(lines[0].words).toHaveLength(3);
     expect(lines[0].words[0]).toEqual({
       word: "Hello",
       startTime: 1000,
       endTime: 2000,
-      endsWithSpace: true,
     });
-    expect(lines[0].words[0].endsWithSpace).toBe(true);
-    expect(lines[0].words[1]).toEqual({ word: "World", startTime: 3000, endTime: 4000 });
-    expect(lines[0].words[1].endsWithSpace).toBeUndefined();
+    expect(lines[0].words[1]).toEqual({ word: " ", startTime: 2000, endTime: 3000 });
+    expect(lines[0].words[2]).toEqual({ word: "World", startTime: 3000, endTime: 4000 });
   });
 
   it("应支持 XML 实体反转义（&#10; 换行与 &quot; 等）", () => {
@@ -159,8 +155,7 @@ describe("parseQRC", () => {
     });
 
     expect(cleaned).toHaveLength(2);
-    expect(cleaned[0].words.map((w) => w.word).join("")).toBe("清晨微风吹过安静的山谷");
-    expect(cleaned[0].words[1].endsWithSpace).toBe(true);
+    expect(cleaned[0].words.map((w) => w.word).join("")).toBe("清晨 微风吹过安静的山谷");
     expect(cleaned[1].words.map((w) => w.word).join("")).toBe("阳光洒落在小溪边");
   });
 });

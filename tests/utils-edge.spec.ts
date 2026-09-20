@@ -131,18 +131,18 @@ describe("pickAdvanceOnEndIndex / pickPrimaryIndex", () => {
 });
 
 describe("getLineText", () => {
-  it("应始终尊重 endsWithSpace 并默认执行 trim", () => {
+  it("应原生拼接 word 并默认执行 trim", () => {
     const words = [
-      { startTime: 0, endTime: 100, word: "Hello", endsWithSpace: true },
-      { startTime: 100, endTime: 200, word: "World", endsWithSpace: false },
+      { startTime: 0, endTime: 100, word: "Hello " },
+      { startTime: 100, endTime: 200, word: "World" },
     ];
     expect(getLineText(words)).toBe("Hello World");
   });
 
-  it("末尾即使标记了 endsWithSpace 也会在整行尾部安全修剪 trim", () => {
+  it("末尾即使带空格也会在整行尾部安全修剪 trim", () => {
     const words = [
-      { startTime: 0, endTime: 100, word: "A", endsWithSpace: true },
-      { startTime: 100, endTime: 200, word: "B", endsWithSpace: true },
+      { startTime: 0, endTime: 100, word: "A " },
+      { startTime: 100, endTime: 200, word: "B " },
     ];
     expect(getLineText(words)).toBe("A B");
   });

@@ -46,32 +46,30 @@ describe("parseKRC", () => {
     expect(metadata.album).toEqual(["我很忙"]);
   });
 
-  it("应正确解析西文词间空格标记 endsWithSpace", () => {
+  it("应正确解析西文词间空格", () => {
     const text = `[00:01.000]<0,500>Hello <500,500>World`;
     const { lines } = parseKRC(text);
 
     expect(lines).toHaveLength(1);
     expect(lines[0].words).toHaveLength(2);
-    expect(lines[0].words[0].word).toBe("Hello");
-    expect(lines[0].words[0].endsWithSpace).toBe(true);
+    expect(lines[0].words[0].word).toBe("Hello ");
     expect(lines[0].words[1].word).toBe("World");
-    expect(lines[0].words[1].endsWithSpace).toBeUndefined();
   });
 
-  it("应将独立空白词标记到前一个词的 endsWithSpace", () => {
+  it("应保留独立空白词", () => {
     const text = `[00:01.000]<0,500>Hello<500,500> <1000,500>World`;
     const { lines } = parseKRC(text);
 
     expect(lines[0].startTime).toBe(1000);
     expect(lines[0].endTime).toBe(2500);
-    expect(lines[0].words).toHaveLength(2);
+    expect(lines[0].words).toHaveLength(3);
     expect(lines[0].words[0]).toEqual({
       word: "Hello",
       startTime: 1000,
       endTime: 1500,
-      endsWithSpace: true,
     });
-    expect(lines[0].words[1]).toEqual({ word: "World", startTime: 2000, endTime: 2500 });
+    expect(lines[0].words[1]).toEqual({ word: " ", startTime: 1500, endTime: 2000 });
+    expect(lines[0].words[2]).toEqual({ word: "World", startTime: 2000, endTime: 2500 });
   });
 
   it("应支持解析酷狗 [language:...] 中的 Base64 翻译与音译", () => {

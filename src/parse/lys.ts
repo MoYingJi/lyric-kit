@@ -81,10 +81,6 @@ export const parseLyS = (text: string, options: ParseOptions = {}): LyricResult 
       pushCleanWord(words, rawWord, wordStart, wordStart + wordDur);
     }
 
-    if (words.length > 0) {
-      delete words[words.length - 1].endsWithSpace;
-    }
-
     if (words.length === 0) continue;
 
     let isBG = declaredBg === true;
