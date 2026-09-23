@@ -667,6 +667,8 @@ export const defaultKeywords: readonly string[] = [
   "谱务",
   "调音师",
   "调音",
+  "调校",
+  "调教",
   "前台工程师",
   "厂牌",
   "唱片公司",
@@ -811,5 +813,7 @@ export const defaultRegexes: readonly string[] = [
   "未经(?:授权|许可)",
   "^纯音乐，请欣赏$",
   "^此歌曲为没有填词的纯音乐，请您欣赏$",
+  "^DJ音乐，请欣赏$",
+  "^本字幕由\u0054\u004d\u0045 AI技术生成$",
   "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}",
 ];

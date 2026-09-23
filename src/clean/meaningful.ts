@@ -8,6 +8,7 @@ export const DEFAULT_DISCLAIMER_KEYWORDS: readonly string[] = [
   "未经许可",
   "大模型提供",
   "机器翻译",
+  "\u0054\u004d\u0045 AI",
 ];
 
 /**

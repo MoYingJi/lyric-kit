@@ -1,5 +1,7 @@
 import type { LyricFormat } from "../types";
 
+const EXCLUDE_AUTHORS_KEYWORDS = ["QQ音乐动态歌词", "krc转qrc工具", "AI智能字幕", "AI生成"];
+
 /**
  * 从歌词原始内容中提取「歌词文件制作者」列表
  * @param content - 歌词原始文本
@@ -27,7 +29,9 @@ export const extractLyricAuthors = (content: string, format: LyricFormat): strin
   }
   if (format === "lrc") {
     const match = content.match(/\[by:([^\]]+)\]/i)?.[1]?.trim();
-    return match ? [match] : [];
+    return match && !EXCLUDE_AUTHORS_KEYWORDS.some((keyword) => match.includes(keyword))
+      ? [match]
+      : [];
   }
   return [];
 };
