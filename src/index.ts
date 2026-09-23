@@ -6,6 +6,7 @@
 // 清洗与归一化
 export { extractLyricAuthors } from "./clean/author";
 export {
+  defaultAuthors,
   defaultKeywords,
   defaultKeywords as excludeKeywords,
   defaultRegexes,

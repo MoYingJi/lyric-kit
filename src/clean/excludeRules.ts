@@ -813,7 +813,17 @@ export const defaultRegexes: readonly string[] = [
   "未经(?:授权|许可)",
   "^纯音乐，请欣赏$",
   "^此歌曲为没有填词的纯音乐，请您欣赏$",
-  "^DJ音乐，请欣赏$",
-  "^本字幕由\u0054\u004d\u0045 AI技术生成$",
+  "^DJ音乐[，,]?\\s*请(?:您)?欣赏$",
+  "^本字幕由\\s*TME\\s*AI\\s*技术生成[。.]?$",
   "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}",
+];
+
+/**
+ * 默认排除的歌词制作者关键词
+ */
+export const defaultAuthors: readonly string[] = [
+  "QQ音乐动态歌词",
+  "krc转qrc工具",
+  "AI智能字幕",
+  "AI生成",
 ];

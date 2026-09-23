@@ -323,4 +323,33 @@ describe("stripLyricMetadata", () => {
     const stripped = stripLyricMetadata(lines);
     expect(stripped).toHaveLength(3);
   });
+
+  it("应剥离调校与调教等虚拟歌手制作职能行", () => {
+    const lines = [
+      makeLine("作词：COP"),
+      makeLine("作曲：COP"),
+      makeLine("调校：纳兰寻风"),
+      makeLine("调教：某调教师"),
+      makeLine("深夜里点亮微弱的光"),
+    ];
+
+    const stripped = stripLyricMetadata(lines);
+    expect(stripped).toHaveLength(1);
+    expect(stripped[0].words[0].word).toBe("深夜里点亮微弱的光");
+  });
+
+  it("应剥离DJ音乐与TME AI生成的占位元数据行", () => {
+    const lines = [
+      makeLine("DJ音乐，请欣赏"),
+      makeLine("本字幕由TME AI技术生成"),
+      makeLine("这是正文第一句"),
+      makeLine("这是正文第二句"),
+      makeLine("本字幕由 TME AI 技术生成。"),
+    ];
+
+    const stripped = stripLyricMetadata(lines);
+    expect(stripped).toHaveLength(2);
+    expect(stripped[0].words[0].word).toBe("这是正文第一句");
+    expect(stripped[1].words[0].word).toBe("这是正文第二句");
+  });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { defaultKeywords, defaultRegexes } from "../src/clean/excludeRules";
+import { defaultAuthors, defaultKeywords, defaultRegexes } from "../src/clean/excludeRules";
 
 /** 与 stripper 内 normalizeKw 保持一致的归一化 */
 const normalizeKw = (str: string): string =>
@@ -35,5 +35,13 @@ describe("excludeRules", () => {
     for (const pattern of defaultRegexes) {
       expect(() => new RegExp(pattern, "i")).not.toThrow();
     }
+  });
+
+  it("制作者排除关键词不应有重复且应包含核心项", () => {
+    expect(new Set(defaultAuthors).size).toBe(defaultAuthors.length);
+    expect(defaultAuthors).toContain("QQ音乐动态歌词");
+    expect(defaultAuthors).toContain("krc转qrc工具");
+    expect(defaultAuthors).toContain("AI智能字幕");
+    expect(defaultAuthors).toContain("AI生成");
   });
 });
