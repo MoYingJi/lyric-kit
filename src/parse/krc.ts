@@ -39,8 +39,6 @@ export const parseKRC = (text: string, options: ParseOptions = {}): LyricResult 
     cleanKangxi = false,
     applyOffset = false,
   } = options;
-  const content = cleanKangxi ? normalizeKangxi(text) : text;
-
   const metadata: LyricMetadata = extractMetadata ? { timingMode: "Word" } : {};
   const lines: LyricLine[] = [];
   let krcTranslations: string[] = [];
@@ -48,7 +46,7 @@ export const parseKRC = (text: string, options: ParseOptions = {}): LyricResult 
   const mainLines: LyricLine[] = [];
   let kanaTag = "";
 
-  for (const raw of content.split("\n")) {
+  for (const raw of text.split("\n")) {
     const trimmed = raw.trim();
     if (!trimmed) continue;
 
@@ -161,6 +159,14 @@ export const parseKRC = (text: string, options: ParseOptions = {}): LyricResult 
 
   if (kanaTag) {
     applyKanaToLines(lines, kanaTag);
+  }
+
+  if (cleanKangxi) {
+    for (const line of lines) {
+      for (const word of line.words) {
+        word.word = normalizeKangxi(word.word);
+      }
+    }
   }
 
   if (applyOffset && metadata.offset) {
