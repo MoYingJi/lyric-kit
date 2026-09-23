@@ -114,6 +114,40 @@ describe("Kana / Ruby Furigana Support", () => {
       expect(line.words[4].ruby?.[0].word).toBe("ぞく");
     });
 
+    it("数字逐词计数，避免将 22/7 的两个 token 按字符重复计数", () => {
+      const qrcText = `[kana:1あか1ぐみ111し1あき1もと1やす]
+[0,100]紅(0,50)組(50,50)
+[100,100]22/(100,50)7(150,50)
+[200,50]詞(200,50)
+[300,100]秋(300,25)元(325,25)康(350,50)`;
+
+      const result = parseQRC(qrcText);
+      expect(result.lines[0].words[0].ruby?.[0].word).toBe("あか");
+      expect(result.lines[0].words[1].ruby?.[0].word).toBe("ぐみ");
+      expect(result.lines[1].words[0].ruby).toBeUndefined();
+      expect(result.lines[1].words[1].ruby).toBeUndefined();
+      expect(result.lines[2].words[0].ruby?.[0].word).toBe("し");
+      expect(result.lines[3].words[0].ruby?.[0].word).toBe("あき");
+      expect(result.lines[3].words[1].ruby?.[0].word).toBe("もと");
+      expect(result.lines[3].words[2].ruby?.[0].word).toBe("やす");
+    });
+
+    it("正文数字 token 仍然可以消费对应的注音单元", () => {
+      const result = parseQRC(`[kana:1いち]
+[0,100]1. アクマバライ(0,100)`);
+
+      expect(result.lines[0].words[0].ruby?.[0].word).toBe("いち");
+    });
+
+    it("连续数字串各自消费一个注音单元", () => {
+      const result = parseQRC(`[kana:1にじゅうに1さんさん]
+[0,100]A22B33(0,100)`);
+      const word = result.lines[0].words[0];
+
+      expect(word.word).toBe("A22B33");
+      expect(word.ruby?.map((ruby) => ruby.word)).toEqual(["にじゅうに", "さんさん"]);
+    });
+
     it("无 [kana:] 标签的普通 QRC 歌词不受影响", () => {
       const qrcText = `[0,1000]Hello(0,500) World(500,500)`;
       const result = parseQRC(qrcText);
