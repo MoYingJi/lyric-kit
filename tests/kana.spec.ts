@@ -154,6 +154,22 @@ describe("Kana / Ruby Furigana Support", () => {
       expect(result.lines).toHaveLength(1);
       expect(result.lines[0].words[0].ruby).toBeUndefined();
     });
+
+    it("应在康熙部首归一化前判断 kana 基础字符", () => {
+      const qrcText = `[offset:0]
+[kana:1は(150865,168)な(151033,252)1お(153326,189)ど(153515,243)]
+[150865,1633]離(150865,420)さ(151285,168)な(151453,260)い(151713,268)と(151981,249)⾔(152230,38)う(152268,230)
+[152498,2173]((152498,192)Memento (152690,328)mori)(153018,308)躍(153326,432)る(153758,177)よ(153935,78)う(154013,78)に(154091,580)`;
+
+      const result = parseQRC(qrcText, { cleanKangxi: true });
+      const [line0, line1] = result.lines;
+      expect(line0.words[0].word).toBe("離");
+      expect(line0.words[0].ruby?.map((ruby) => ruby.word)).toEqual(["は", "な"]);
+      expect(line0.words[5].word).toBe("言");
+      expect(line0.words[5].ruby).toBeUndefined();
+      expect(line1.words[3].word).toBe("躍");
+      expect(line1.words[3].ruby?.map((ruby) => ruby.word)).toEqual(["お", "ど"]);
+    });
   });
 
   describe("parseKRC with Kana", () => {

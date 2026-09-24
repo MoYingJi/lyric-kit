@@ -92,8 +92,7 @@ export const parseQRC = (text: string, options: ParseOptions = {}): LyricResult 
     cleanKangxi = false,
     applyOffset = false,
   } = options;
-  const normalized = cleanKangxi ? normalizeKangxi(text) : text;
-  const { content, xmlMeta } = extractFromXml(normalized);
+  const { content, xmlMeta } = extractFromXml(text);
   const metadata: LyricMetadata =
     extractMetadata && xmlMeta
       ? { ...xmlMeta, timingMode: "Word" }
@@ -147,6 +146,14 @@ export const parseQRC = (text: string, options: ParseOptions = {}): LyricResult 
 
   if (kanaTag) {
     applyKanaToLines(lines, kanaTag);
+  }
+
+  if (cleanKangxi) {
+    for (const line of lines) {
+      for (const word of line.words) {
+        word.word = normalizeKangxi(word.word);
+      }
+    }
   }
 
   if (applyOffset && metadata.offset) {
