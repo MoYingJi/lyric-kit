@@ -1,4 +1,5 @@
 import { normalizeKangxi } from "../clean/kangxi";
+import { isMeaningfulTranslation } from "../clean/meaningful";
 import type { LyricLine, LyricMetadata, LyricResult, LyricWord, ParseOptions } from "../types";
 
 /** 匹配 Dialogue 行时间戳、Style 与 Name（Speaker）字段 */
@@ -161,7 +162,8 @@ export const parseASS = (text: string, options: ParseOptions = {}): LyricResult 
       { startTime: source.startTime, endTime: source.endTime, word: stripAssTags(source.text) },
     ];
 
-    const translatedLyric = group.ts ? stripAssTags(group.ts.text).trim() : "";
+    const translation = group.ts ? stripAssTags(group.ts.text).trim() : "";
+    const translatedLyric = isMeaningfulTranslation(translation) ? translation : "";
     const romanLyric = group.roma ? stripAssTags(group.roma.text).trim() : "";
 
     const track = source.speaker || source.style;

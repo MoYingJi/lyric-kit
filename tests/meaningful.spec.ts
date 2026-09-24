@@ -50,4 +50,11 @@ describe("isMeaningfulTranslation", () => {
     expect(res.lines[1].translatedLyric).toBe("");
     expect(res.lines[2].translatedLyric).toBe("第一句歌词");
   });
+
+  it("在解析同文件内的 LRC 翻译时也应过滤", () => {
+    const res = parseLyric("[00:01.00]主歌词\n[00:01.00]以下歌词翻译由文曲大模型提供");
+
+    expect(res.lines).toHaveLength(1);
+    expect(res.lines[0].translatedLyric).toBe("");
+  });
 });

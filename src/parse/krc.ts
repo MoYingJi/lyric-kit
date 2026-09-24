@@ -1,4 +1,5 @@
 import { normalizeKangxi } from "../clean/kangxi";
+import { isMeaningfulTranslation } from "../clean/meaningful";
 import type { LyricLine, LyricMetadata, LyricResult, LyricWord, ParseOptions } from "../types";
 import { detectBackgroundLine, splitTrailingBackground } from "../utils/bg";
 import { applyKanaToLines } from "../utils/kana";
@@ -152,7 +153,9 @@ export const parseKRC = (text: string, options: ParseOptions = {}): LyricResult 
 
   if (krcTranslations.length > 0 || krcRomanizations.length > 0) {
     for (let idx = 0; idx < mainLines.length; idx++) {
-      if (krcTranslations[idx]) mainLines[idx].translatedLyric = krcTranslations[idx];
+      if (isMeaningfulTranslation(krcTranslations[idx] ?? "")) {
+        mainLines[idx].translatedLyric = krcTranslations[idx];
+      }
       if (krcRomanizations[idx]) mainLines[idx].romanLyric = krcRomanizations[idx];
     }
   }
