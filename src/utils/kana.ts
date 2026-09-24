@@ -1,11 +1,19 @@
 import type { LyricLine, LyricSpan, LyricWord } from "../types";
 
 /**
- * 匹配可被 kana 注音的基础字符
+ * 匹配可被 kana 注音、且按字符计数的 CJK 基字符
  *
- * 包含 CJK 统一表意文字、扩展 A、日文汉字叠字 々 与符号 〆 以及数字 0-9
+ * - CJK 统一表意文字基本区 `\u4e00-\u9fff`
+ * - CJK 统一表意文字扩展 A `\u3400-\u4dbf`
+ * - 日文汉字叠字 々 `\u3005`
+ * - 日文符号 〆 `\u3006`
  */
-const KANA_BASE_REGEX = /[\u4e00-\u9fff\u3400-\u4dbf\u3005\u30060-9]/;
+const CJK_BASE_REGEX = /[\u4e00-\u9fff\u3400-\u4dbf\u3005\u3006]/;
+
+/**
+ * 匹配需要按逐词 token 计数的半角或全角数字
+ */
+const DIGIT_REGEX = /[0-9０-９]/;
 
 /** 单个假名注音单元 */
 export interface KanaUnit {
@@ -111,13 +119,31 @@ export const applyKanaToLines = (lines: LyricLine[], rawKanaTag: string): void =
     for (let wordIndex = 0; wordIndex < currentLine.words.length; wordIndex++) {
       const currentWord = currentLine.words[wordIndex];
       const wordText = currentWord.word;
-      for (let charIndex = 0; charIndex < wordText.length; charIndex++) {
-        if (KANA_BASE_REGEX.test(wordText[charIndex])) {
+      let charIndex = 0;
+      while (charIndex < wordText.length) {
+        if (CJK_BASE_REGEX.test(wordText[charIndex])) {
           kanjiLocations.push({
             charIndexInWord: charIndex,
             wordRef: currentWord,
           });
+          charIndex++;
+          continue;
         }
+
+        // 连续数字串只消费一个基字符，例如 `27` 计一次，`22/7` 计两次。
+        if (DIGIT_REGEX.test(wordText[charIndex])) {
+          const firstNumberIndex = charIndex;
+          while (charIndex < wordText.length && DIGIT_REGEX.test(wordText[charIndex])) {
+            charIndex++;
+          }
+          kanjiLocations.push({
+            charIndexInWord: firstNumberIndex,
+            wordRef: currentWord,
+          });
+          continue;
+        }
+
+        charIndex++;
       }
     }
   }
