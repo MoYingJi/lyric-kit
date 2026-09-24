@@ -98,6 +98,7 @@ export const parseKanaUnits = (rawKanaTag: string): KanaUnit[] => {
 /** 汉字在歌词中的定位项 */
 interface KanjiLocation {
   charIndexInWord: number;
+  charLength: number;
   wordRef: LyricWord;
 }
 
@@ -124,6 +125,7 @@ export const applyKanaToLines = (lines: LyricLine[], rawKanaTag: string): void =
         if (CJK_BASE_REGEX.test(wordText[charIndex])) {
           kanjiLocations.push({
             charIndexInWord: charIndex,
+            charLength: 1,
             wordRef: currentWord,
           });
           charIndex++;
@@ -138,6 +140,7 @@ export const applyKanaToLines = (lines: LyricLine[], rawKanaTag: string): void =
           }
           kanjiLocations.push({
             charIndexInWord: firstNumberIndex,
+            charLength: charIndex - firstNumberIndex,
             wordRef: currentWord,
           });
           continue;
@@ -192,7 +195,9 @@ export const applyKanaToLines = (lines: LyricLine[], rawKanaTag: string): void =
       if (totalChars > 1 && rubyEndTime > rubyStartTime) {
         const charDuration = (rubyEndTime - rubyStartTime) / totalChars;
         rubyStartTime = Math.round(targetWord.startTime + singleLoc.charIndexInWord * charDuration);
-        rubyEndTime = Math.round(rubyStartTime + charDuration);
+        rubyEndTime = Math.round(
+          targetWord.startTime + (singleLoc.charIndexInWord + singleLoc.charLength) * charDuration,
+        );
       }
 
       if (!targetWord.ruby) {

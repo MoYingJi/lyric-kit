@@ -72,20 +72,6 @@ export const isFullyEnclosedByParens = (text: string): boolean => {
 };
 
 /**
- * 判断当前尾随括号内容是否为汉字后跟随的假名注音
- * @param words - 歌词单词数组
- * @param openIndex - 开启括号所在的单词索引
- * @returns 是否为假名注音尾随
- */
-const isJapaneseRubyTail = (words: LyricWord[], openIndex: number): boolean => {
-  const before = joinedWords(words.slice(0, openIndex)).trim();
-  const prevChar = Array.from(before).at(-1) ?? "";
-  if (!HAN_RE.test(prevChar)) return false;
-  const rubyText = stripParensAndPunctuation(joinedWords(words.slice(openIndex)));
-  return !!rubyText && KANA_ONLY_RE.test(rubyText);
-};
-
-/**
  * 剥除单词数组首尾的包裹括号，清理空节点并修补起止时间
  * @param words - 待处理的单词数组
  * @param originalStartTime - 原始起始时间戳
@@ -217,6 +203,7 @@ export const splitTrailingBackground = (line: LyricLine, enabled = true): LyricL
 
   let depth = 0;
   let openIndex = -1;
+  let openCharIndex = -1;
 
   for (let index = words.length - 1; index >= 0; index--) {
     const wordText = words[index].word;
@@ -228,6 +215,7 @@ export const splitTrailingBackground = (line: LyricLine, enabled = true): LyricL
         depth--;
         if (depth === 0) {
           openIndex = index;
+          openCharIndex = charIdx;
           break;
         }
       }
@@ -235,12 +223,23 @@ export const splitTrailingBackground = (line: LyricLine, enabled = true): LyricL
     if (depth === 0 && openIndex !== -1) break;
   }
 
-  if (openIndex < 1) return null;
-  if (isJapaneseRubyTail(words, openIndex)) return null;
+  if (openIndex < 0) return null;
+
+  const boundaryWord = words[openIndex];
+  const prefix = boundaryWord.word.slice(0, openCharIndex);
+  const suffix = boundaryWord.word.slice(openCharIndex);
+  const mainText = (joinedWords(words.slice(0, openIndex)) + prefix).trimEnd();
+  const bgText = stripParensAndPunctuation(suffix + joinedWords(words.slice(openIndex + 1)));
+  if (!mainText || !bgText) return null;
+  if (HAN_RE.test(Array.from(mainText).at(-1) ?? "") && KANA_ONLY_RE.test(bgText)) return null;
 
   const bgWords: LyricWord[] = words.slice(openIndex).map((word) => ({ ...word }));
-  const bgRawText = stripParensAndPunctuation(joinedWords(bgWords));
-  if (!bgRawText) return null;
+  bgWords[0].word = suffix;
+  // 括号紧随主词且未包含和声文字时，不把主词的时长归给和声。
+  // 若同一计时词包含两侧文字，沿用原时间跨度，不推测词内的精确分界。
+  if (prefix.trim() && !suffix.slice(1).trim()) {
+    bgWords[0].startTime = boundaryWord.endTime;
+  }
 
   const originalBgStart = bgWords[0].startTime;
   const originalBgEnd = bgWords[bgWords.length - 1].endTime;
@@ -249,6 +248,7 @@ export const splitTrailingBackground = (line: LyricLine, enabled = true): LyricL
   if (!cleaned) return null;
 
   const mainWords = words.slice(0, openIndex).filter((word) => word.word !== "");
+  if (prefix.trim()) mainWords.push({ ...boundaryWord, word: prefix.trimEnd() });
   if (mainWords.length === 0) return null;
 
   line.words = mainWords;
