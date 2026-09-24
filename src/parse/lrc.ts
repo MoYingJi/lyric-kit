@@ -248,6 +248,7 @@ export const parseLRC = (text: string, options: ParseOptions = {}): LyricResult 
   lines.sort((lineA, lineB) => lineA.startTime - lineB.startTime);
 
   const merged: LyricLine[] = [];
+  const translationConsumed = new Set<LyricLine>();
   for (const line of lines) {
     const currentText = getLineText(line);
 
@@ -289,7 +290,8 @@ export const parseLRC = (text: string, options: ParseOptions = {}): LyricResult 
     }
 
     if (target) {
-      if (!target.translatedLyric) {
+      if (!translationConsumed.has(target)) {
+        translationConsumed.add(target);
         if (isMeaningfulTranslation(currentText)) target.translatedLyric = currentText;
         continue;
       }
