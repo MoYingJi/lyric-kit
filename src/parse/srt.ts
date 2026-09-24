@@ -1,4 +1,5 @@
 import { normalizeKangxi } from "../clean/kangxi";
+import { isMeaningfulTranslation } from "../clean/meaningful";
 import type { LyricLine, LyricResult, ParseOptions } from "../types";
 
 /** 匹配 SRT 时间戳 HH:MM:SS,mmm */
@@ -64,7 +65,8 @@ export const parseSRT = (text: string, options: ParseOptions = {}): LyricResult 
 
     if (multiLineMode === "bilingual") {
       mainText = textLines[0] ?? "";
-      translatedLyric = textLines[1] ?? "";
+      const translation = textLines[1] ?? "";
+      translatedLyric = isMeaningfulTranslation(translation) ? translation : "";
       romanLyric = textLines[2] ?? "";
     } else {
       mainText = textLines.join(" ");

@@ -1,4 +1,5 @@
 import { normalizeKangxi } from "../clean/kangxi";
+import { isMeaningfulTranslation } from "../clean/meaningful";
 import type {
   DOMParserConstructor,
   DOMParserLike,
@@ -705,7 +706,9 @@ export const parseTTML = (text: string, options: ParseOptions = {}): LyricResult
               bgState.translations.map((transItem) => transItem.lang),
               preferredLang,
             );
-            if (idx !== -1) trans = bgState.translations[idx].text;
+            if (idx !== -1 && isMeaningfulTranslation(bgState.translations[idx].text)) {
+              trans = bgState.translations[idx].text;
+            }
           }
           if (!roman && bgState.romanizations.length > 0) {
             roman = bgState.romanizations[0].text;
@@ -719,7 +722,7 @@ export const parseTTML = (text: string, options: ParseOptions = {}): LyricResult
 
           state.bgLines.push({
             words: bgState.words,
-            translatedLyric: trans,
+            translatedLyric: isMeaningfulTranslation(trans) ? trans : "",
             romanLyric: roman,
             startTime: bgStart,
             endTime: bgEndMs,
@@ -854,7 +857,9 @@ export const parseTTML = (text: string, options: ParseOptions = {}): LyricResult
           sc.translations.map((transItem) => transItem.lang),
           preferredLang,
         );
-        if (idx !== -1) translatedLyric = sc.translations[idx].text;
+        if (idx !== -1 && isMeaningfulTranslation(sc.translations[idx].text)) {
+          translatedLyric = sc.translations[idx].text;
+        }
       }
       if (sc.romanizations?.length) {
         romanLyric = sc.romanizations[0].text;
@@ -868,7 +873,9 @@ export const parseTTML = (text: string, options: ParseOptions = {}): LyricResult
         state.translations.map((transItem) => transItem.lang),
         preferredLang,
       );
-      if (idx !== -1) translatedLyric = state.translations[idx].text;
+      if (idx !== -1 && isMeaningfulTranslation(state.translations[idx].text)) {
+        translatedLyric = state.translations[idx].text;
+      }
     }
     if (!romanLyric && state.romanizations.length > 0) {
       romanLyric = state.romanizations[0].text;

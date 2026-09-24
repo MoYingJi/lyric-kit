@@ -1,4 +1,5 @@
 import { normalizeKangxi } from "../clean/kangxi";
+import { isMeaningfulTranslation } from "../clean/meaningful";
 import type { LyricLine, LyricMetadata, LyricResult, LyricWord, ParseOptions } from "../types";
 import { detectBackgroundLine, splitTrailingBackground } from "../utils/bg";
 import { applyLrcMetaTag, applyTimestampOffset, META_TAG_RE } from "../utils/meta";
@@ -289,7 +290,7 @@ export const parseLRC = (text: string, options: ParseOptions = {}): LyricResult 
 
     if (target) {
       if (!target.translatedLyric) {
-        target.translatedLyric = currentText;
+        if (isMeaningfulTranslation(currentText)) target.translatedLyric = currentText;
         continue;
       }
       if (!target.romanLyric) {
