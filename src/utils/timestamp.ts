@@ -7,12 +7,12 @@
 export const MAX_TIME = 60039999;
 
 /**
- * 匹配方括号时间戳 [mm:ss.xxx] / [mm:ss:xxx] / [mm:ss.xx] / [mm:ss.x]
+ * 匹配方括号时间戳 [mm:ss] 及带 1~3 位小数的点号、冒号格式
  */
-export const BRACKET_TIME_RE = /\[(\d+):(\d+)[.:](\d{1,3})\]/g;
+export const BRACKET_TIME_RE = /\[(\d+):(\d+)(?:[.:](\d{1,3}))?\]/g;
 
 /**
- * 匹配尖括号时间戳 <mm:ss.xxx> / <mm:ss:xxx> / <mm:ss.xx> / <mm:ss.x>
+ * 匹配尖括号时间戳 <mm:ss> 及带 1~3 位小数的点号、冒号格式
  */
 export const ANGLE_TIME_RE = /<(\d+):(\d+)(?:[.:](\d{1,3}))?>([^<]*)/g;
 
@@ -20,14 +20,14 @@ export const ANGLE_TIME_RE = /<(\d+):(\d+)(?:[.:](\d{1,3}))?>([^<]*)/g;
  * 将分、秒、毫秒字符串解析为毫秒数
  * @param min - 分钟字符串
  * @param sec - 秒字符串
- * @param ms - 毫秒字符串（1~3 位）
+ * @param ms - 毫秒字符串（1~3 位），省略时按零处理
  * @param padEndMs - 是否自动归一化毫秒位数，默认 true
  * @returns 毫秒数，不超过 MAX_TIME
  */
 export const parseTime = (
   min: string,
   sec: string,
-  ms: string,
+  ms: string = "0",
   padEndMs: boolean = true,
 ): number => {
   const minutes = parseInt(min, 10);
@@ -48,24 +48,25 @@ export const parseTime = (
  * @returns 毫秒数，解析失败返回 -1
  */
 export const parseBracketTag = (tag: string): number => {
-  const match = /^\[(\d+):(\d+)[.:](\d{1,3})\]$/.exec(tag);
+  const match = /^\[(\d+):(\d+)(?:[.:](\d{1,3}))?\]$/.exec(tag);
   if (!match) return -1;
   return parseTime(match[1], match[2], match[3]);
 };
 
 /**
  * 解析 TTML 时间戳为毫秒数
- * @param value - TTML 时间戳字符串（支持纯秒数、分秒、时分秒）
+ * @param value - TTML 时间戳字符串（支持时分秒及 h / m / s / ms 单位）
  * @returns 毫秒数
  */
 export const parseTTMLTime = (value: string): number => {
   const text = value.trim();
   if (!text) return 0;
 
-  // 纯秒数带单位 s 格式
-  if (text.endsWith("s")) {
-    const num = Number(text.slice(0, -1));
-    return Number.isNaN(num) ? 0 : Math.round(num * 1000);
+  const offset = /^(\d+(?:\.\d+)?)(ms|h|m|s)$/.exec(text);
+  if (offset) {
+    const unit = offset[2];
+    const scale = unit === "h" ? 3_600_000 : unit === "m" ? 60_000 : unit === "s" ? 1000 : 1;
+    return Math.round(Number(offset[1]) * scale);
   }
 
   // 纯秒数不带冒号格式

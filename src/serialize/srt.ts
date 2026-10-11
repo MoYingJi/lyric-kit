@@ -1,4 +1,4 @@
-import type { LyricLine } from "../types";
+import type { LyricLine, SerializeOptions } from "../types";
 import { getLineText } from "../utils/text";
 import { formatSrtTime } from "../utils/timestamp";
 
@@ -7,7 +7,7 @@ import { formatSrtTime } from "../utils/timestamp";
  * @param lines - 歌词行数组
  * @returns SRT 格式字符串
  */
-export const toSRT = (lines: LyricLine[]): string => {
+export const toSRT = (lines: LyricLine[], options: SerializeOptions = {}): string => {
   const blocks: string[] = [];
   let index = 1;
 
@@ -18,9 +18,15 @@ export const toSRT = (lines: LyricLine[]): string => {
     const timeHeader = `${formatSrtTime(line.startTime)} --> ${formatSrtTime(line.endTime)}`;
     const textRows: string[] = [];
 
-    if (line.romanLyric) textRows.push(line.romanLyric);
-    if (line.translatedLyric) textRows.push(line.translatedLyric);
-    textRows.push(text);
+    if (options.roundTrip) {
+      textRows.push(text);
+      if (line.translatedLyric || line.romanLyric) textRows.push(line.translatedLyric || "//");
+      if (line.romanLyric) textRows.push(line.romanLyric);
+    } else {
+      if (line.romanLyric) textRows.push(line.romanLyric);
+      if (line.translatedLyric) textRows.push(line.translatedLyric);
+      textRows.push(text);
+    }
 
     blocks.push(`${index++}\n${timeHeader}\n${textRows.join("\n")}`);
   }

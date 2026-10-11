@@ -643,9 +643,11 @@ export const parseTTML = (text: string, options: ParseOptions = {}): LyricResult
 
           let bgStart = bgBegin ? parseTTMLTime(bgBegin) : 0;
           let bgEndMs = bgEnd ? parseTTMLTime(bgEnd) : 0;
-          if ((!bgStart || !bgEndMs) && bgState.words.length > 0) {
-            bgStart = Math.min(...bgState.words.map((word) => word.startTime));
-            bgEndMs = Math.max(...bgState.words.map((word) => word.endTime));
+          if (bgState.words.length > 0) {
+            const childStart = Math.min(...bgState.words.map((word) => word.startTime));
+            const childEnd = Math.max(...bgState.words.map((word) => word.endTime));
+            if (bgStart === 0 || (childStart > 0 && childStart < bgStart)) bgStart = childStart;
+            if (bgEndMs === 0 || childEnd > bgEndMs) bgEndMs = childEnd;
           }
 
           // 背景音自身无时间时继承父级时间
@@ -839,9 +841,13 @@ export const parseTTML = (text: string, options: ParseOptions = {}): LyricResult
     let startTime = begin ? parseTTMLTime(begin) : 0;
     let endTime = end ? parseTTMLTime(end) : 0;
 
-    if ((!startTime || !endTime) && state.words.length > 0) {
-      startTime = Math.min(...state.words.map((word) => word.startTime));
-      endTime = Math.max(...state.words.map((word) => word.endTime));
+    // 与 AMLL 一致，逐字和背景人声共同扩展行时间，缺失边界分别推导。
+    const timedElements = [...state.words, ...state.bgLines];
+    if (timedElements.length > 0) {
+      const childStart = Math.min(...timedElements.map((item) => item.startTime));
+      const childEnd = Math.max(...timedElements.map((item) => item.endTime));
+      if (startTime === 0 || (childStart > 0 && childStart < startTime)) startTime = childStart;
+      if (endTime === 0 || childEnd > endTime) endTime = childEnd;
     }
 
     // 逐行翻译与音译决策

@@ -7,8 +7,8 @@ import { applyLrcMetaTag, applyTimestampOffset, META_TAG_RE } from "../utils/met
 import { parseTime } from "../utils/timestamp";
 import { pushCleanWord } from "../utils/word";
 
-/** 行头时间戳：[mm:ss.xxx] / [mm:ss:xxx] */
-const TIME_HEADER_RE = /^\[(\d+):(\d+)[.:](\d{1,3})\]/;
+/** 行头时间戳：[mm:ss] / [mm:ss.xxx] / [mm:ss:xxx] */
+const TIME_HEADER_RE = /^\[(\d+):(\d+)(?:[.:](\d{1,3}))?\]/;
 
 /** 行头毫秒数：[起始ms, 时长ms] */
 const MS_HEADER_RE = /^\[(\d+),(\d+)\]/;
@@ -88,7 +88,7 @@ export const parseKRC = (text: string, options: ParseOptions = {}): LyricResult 
         } else if (extractMetadata) {
           metadata.language = val;
         }
-      } else if (extractMetadata) {
+      } else if (extractMetadata || (applyOffset && key === "offset")) {
         applyLrcMetaTag(metadata, metaMatch[1], metaMatch[2]);
       }
       continue;
@@ -178,6 +178,6 @@ export const parseKRC = (text: string, options: ParseOptions = {}): LyricResult 
 
   return {
     lines,
-    metadata,
+    metadata: extractMetadata ? metadata : {},
   };
 };
