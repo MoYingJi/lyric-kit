@@ -111,7 +111,7 @@ export const parseQRC = (text: string, options: ParseOptions = {}): LyricResult 
       if (metaMatch[1].toLowerCase() === "kana") {
         kanaTag = trimmed;
       }
-      if (extractMetadata) {
+      if (extractMetadata || (applyOffset && metaMatch[1].toLowerCase() === "offset")) {
         applyLrcMetaTag(metadata, metaMatch[1], metaMatch[2]);
       }
       continue;
@@ -162,6 +162,6 @@ export const parseQRC = (text: string, options: ParseOptions = {}): LyricResult 
 
   return {
     lines,
-    metadata,
+    metadata: extractMetadata ? metadata : {},
   };
 };

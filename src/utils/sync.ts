@@ -56,6 +56,47 @@ export const findActiveLyricIndices = (lines: LyricLine[], time: number): number
 };
 
 /**
+ * 为按 startTime 排序的歌词创建可重复查询的时间快照
+ * 适用于每帧查询，构建 O(n)，查询先二分裁剪已结束/未开始的区间，再检查候选重叠行
+ * 原数组或时间戳改变后须重新创建，不会缓存或修改调用方的对象
+ * @param lines - 已按 startTime 排序的歌词行数组
+ * @returns 根据播放毫秒数查询激活行索引的函数
+ */
+export const createActiveLyricFinder = (
+  lines: readonly LyricLine[],
+): ((time: number) => number[]) => {
+  const starts = Float64Array.from(lines, (line) => line.startTime);
+  const ends = Float64Array.from(lines, (line) => line.endTime);
+  const maxEnds = new Float64Array(lines.length);
+  let maxEnd = -Infinity;
+  for (let index = 0; index < lines.length; index++) {
+    if (ends[index] > maxEnd) maxEnd = ends[index];
+    maxEnds[index] = maxEnd;
+  }
+
+  const upperBound = (values: Float64Array, time: number): number => {
+    let low = 0;
+    let high = values.length;
+    while (low < high) {
+      const mid = (low + high) >>> 1;
+      if (values[mid] <= time) low = mid + 1;
+      else high = mid;
+    }
+    return low;
+  };
+
+  return (time: number): number[] => {
+    const result: number[] = [];
+    if (Number.isNaN(time)) return result;
+    const limit = upperBound(starts, time);
+    for (let index = upperBound(maxEnds, time); index < limit; index++) {
+      if (time < ends[index]) result.push(index);
+    }
+    return result;
+  };
+};
+
+/**
  * 选出最新已开始的行索引
  * @param lines - 歌词行数组
  * @param time - 当前播放毫秒数

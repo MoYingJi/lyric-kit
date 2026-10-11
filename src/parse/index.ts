@@ -123,29 +123,128 @@ export const pairTranslation = (
   transLines: LyricLine[],
   field: "translatedLyric" | "romanLyric",
 ): void => {
-  const trans = [...transLines].sort((lineA, lineB) => lineA.startTime - lineB.startTime);
-  let mainIndex = 0;
-  let transIndex = 0;
-  while (mainIndex < lines.length && transIndex < trans.length) {
-    const diff = lines[mainIndex].startTime - trans[transIndex].startTime;
-    if (Math.abs(diff) <= ALIGN_TOLERANCE_MS) {
-      const text = lineText(trans[transIndex]);
-      if (isMeaningfulTranslation(text)) lines[mainIndex][field] = text;
-      if (
-        field === "romanLyric" &&
-        hasWordTiming(lines[mainIndex].words) &&
-        hasWordTiming(trans[transIndex].words)
-      ) {
-        alignRomanization(lines[mainIndex].words, trans[transIndex].words);
-      }
-      mainIndex++;
-      transIndex++;
-    } else if (diff < 0) {
-      mainIndex++;
-    } else {
-      transIndex++;
+  if (lines.length === 0 || transLines.length === 0) return;
+  const assignedMain = new Set<LyricLine>();
+  const assignedTrans = new Set<LyricLine>();
+  const assign = (main: LyricLine, trans: LyricLine): void => {
+    assignedMain.add(main);
+    assignedTrans.add(trans);
+    const text = lineText(trans);
+    if (isMeaningfulTranslation(text)) main[field] = text;
+    if (field === "romanLyric" && hasWordTiming(main.words) && hasWordTiming(trans.words)) {
+      alignRomanization(main.words, trans.words);
     }
+  };
+
+  const pairGroup = (main: LyricLine[], trans: LyricLine[]): void => {
+    if (main.length === 0 || trans.length === 0) return;
+    main.sort((a, b) => a.startTime - b.startTime);
+    trans.sort((a, b) => a.startTime - b.startTime);
+    const matched = new Set<LyricLine>();
+    const pending: LyricLine[] = [];
+    // 先预留所有精确时间戳，避免容差匹配抢占后续的精确匹配
+    let exactIndex = 0;
+    for (const item of trans) {
+      while (exactIndex < main.length && main[exactIndex].startTime < item.startTime) exactIndex++;
+      if (main[exactIndex]?.startTime === item.startTime) {
+        const target = main[exactIndex++];
+        assign(target, item);
+        matched.add(target);
+      } else pending.push(item);
+    }
+
+    if (pending.length === 0) return;
+    const available = main.filter((line) => !matched.has(line));
+    if (available.length === 0) return;
+    const next = createAvailableIndex(available.length);
+    const previous = createAvailableIndex(available.length);
+    const lowerBound = (time: number): number => {
+      let low = 0;
+      let high = available.length;
+      while (low < high) {
+        const mid = (low + high) >>> 1;
+        if (available[mid].startTime < time) low = mid + 1;
+        else high = mid;
+      }
+      return low;
+    };
+    for (const item of pending) {
+      const low = lowerBound(item.startTime);
+      const right = next.find(low);
+      const left = available.length - 1 - previous.find(available.length - low);
+      const leftDiff = left >= 0 ? item.startTime - available[left].startTime : Infinity;
+      const rightDiff =
+        right < available.length ? available[right].startTime - item.startTime : Infinity;
+      if (Math.min(leftDiff, rightDiff) > ALIGN_TOLERANCE_MS) continue;
+      const nearest = leftDiff <= rightDiff ? left : right;
+      // 同时间戳的多个候选保持输入顺序
+      const index = next.find(lowerBound(available[nearest].startTime));
+      assign(available[index], item);
+      next.remove(index);
+      previous.remove(available.length - 1 - index);
+    }
+  };
+  const pairGroups = (
+    main: LyricLine[],
+    trans: LyricLine[],
+    mode: "agent" | "voice" | "background" | "any",
+  ): void => {
+    if (main.length === 0 || trans.length === 0) return;
+    const groups = new Map<string, { main: LyricLine[]; trans: LyricLine[] }>();
+    for (const [items, field] of [
+      [main, "main"],
+      [trans, "trans"],
+    ] as const) {
+      for (const item of items) {
+        const key = JSON.stringify([
+          mode !== "any" && item.isBG,
+          (mode === "voice" || (mode === "agent" && !item.agentId)) && item.isDuet,
+          mode === "agent" ? (item.agentId ?? "") : "",
+        ]);
+        let group = groups.get(key);
+        if (!group) {
+          group = { main: [], trans: [] };
+          groups.set(key, group);
+        }
+        group[field].push(item);
+      }
+    }
+    for (const group of groups.values()) pairGroup(group.main, group.trans);
+  };
+
+  pairGroups(lines, transLines, "agent");
+  // 逐步兼容未标记歌手或声部的辅助文件，双方明确标记的不同歌手不互相回退。
+  for (const mode of ["voice", "background", "any"] as const) {
+    if (assignedTrans.size === transLines.length || assignedMain.size === lines.length) return;
+    pairGroups(
+      lines.filter((line) => !assignedMain.has(line)),
+      transLines.filter((line) => !assignedTrans.has(line) && !line.agentId),
+      mode,
+    );
+    pairGroups(
+      lines.filter((line) => !assignedMain.has(line) && !line.agentId),
+      transLines.filter((line) => !assignedTrans.has(line) && !!line.agentId),
+      mode,
+    );
   }
+};
+
+/** 跳过已消费索引，通过路径压缩避免密集时间戳反复线性扫描，末项为越界哨兵 */
+const createAvailableIndex = (length: number) => {
+  const parents = Uint32Array.from({ length: length + 1 }, (_, index) => index);
+  const find = (index: number): number => {
+    while (parents[index] !== index) {
+      parents[index] = parents[parents[index]];
+      index = parents[index];
+    }
+    return index;
+  };
+  return {
+    find,
+    remove: (index: number): void => {
+      parents[index] = find(index + 1);
+    },
+  };
 };
 
 /**
@@ -162,11 +261,15 @@ export const parseLyric = (input: string | LyricInput, options: ParseOptions = {
   // QRC/KRC 的 kana 按原始基字符计数，外部注音也必须在部首归一化前对齐。
   const deferKangxi =
     payload.kana && options.cleanKangxi && (actualFormat === "qrc" || actualFormat === "krc");
-  const mainResult = parseContent(
-    payload.content,
-    actualFormat,
-    deferKangxi ? { ...options, cleanKangxi: false } : options,
-  );
+  const collectKanaOffset =
+    payload.kana &&
+    options.applyOffset &&
+    ["lrc", "qrc", "krc", "yrc", "lys"].includes(actualFormat);
+  const mainResult = parseContent(payload.content, actualFormat, {
+    ...options,
+    ...(deferKangxi ? { cleanKangxi: false } : {}),
+    ...(collectKanaOffset ? { extractMetadata: true } : {}),
+  });
   const lines = mainResult.lines;
 
   if (payload.translation) {
@@ -183,8 +286,8 @@ export const parseLyric = (input: string | LyricInput, options: ParseOptions = {
     pairTranslation(lines, parseContent(payload.romaji, romajiFormat, options).lines, "romanLyric");
   }
 
-  if (payload.kana) {
-    applyKanaToLines(lines, payload.kana);
+  if (payload.kana && !lines.some((line) => line.words.some((word) => word.ruby?.length))) {
+    applyKanaToLines(lines, payload.kana, collectKanaOffset ? mainResult.metadata.offset : 0);
   }
 
   if (deferKangxi) {
@@ -195,6 +298,6 @@ export const parseLyric = (input: string | LyricInput, options: ParseOptions = {
 
   return {
     lines,
-    metadata: mainResult.metadata,
+    metadata: options.extractMetadata ? mainResult.metadata : {},
   };
 };

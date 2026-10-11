@@ -106,8 +106,13 @@ interface KanjiLocation {
  * 将解析出的 [kana: ...] 注音对齐并挂载到歌词行的每个 LyricWord 上
  * @param lines - 已解析出的歌词行列表
  * @param rawKanaTag - [kana:...] 标签字符串
+ * @param timingOffset - 仅作用于标签内显式音节时间戳的偏移毫秒数
  */
-export const applyKanaToLines = (lines: LyricLine[], rawKanaTag: string): void => {
+export const applyKanaToLines = (
+  lines: LyricLine[],
+  rawKanaTag: string,
+  timingOffset = 0,
+): void => {
   if (!rawKanaTag?.includes("[kana:")) return;
 
   const units = parseKanaUnits(rawKanaTag);
@@ -177,7 +182,13 @@ export const applyKanaToLines = (lines: LyricLine[], rawKanaTag: string): void =
       if (!primaryWord.ruby) {
         primaryWord.ruby = [];
       }
-      primaryWord.ruby.push(...unit.spans);
+      primaryWord.ruby.push(
+        ...unit.spans.map((span) => ({
+          ...span,
+          startTime: Math.max(0, span.startTime + timingOffset),
+          endTime: Math.max(0, span.endTime + timingOffset),
+        })),
+      );
       continue;
     }
 

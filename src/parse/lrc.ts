@@ -219,7 +219,7 @@ export const parseLRC = (text: string, options: ParseOptions = {}): LyricResult 
       const key = metaMatch[1];
       const val = metaMatch[2];
 
-      if (extractMetadata) {
+      if (extractMetadata || (applyOffset && key.toLowerCase() === "offset")) {
         applyLrcMetaTag(metadata, key, val);
       }
 
@@ -342,6 +342,6 @@ export const parseLRC = (text: string, options: ParseOptions = {}): LyricResult 
 
   return {
     lines: resultLines,
-    metadata,
+    metadata: extractMetadata ? metadata : {},
   };
 };

@@ -34,13 +34,7 @@ export {
 } from "./parse";
 
 // 序列化器
-export {
-  serializeLyric,
-  toEnhancedLRC,
-  toLRC,
-  toSRT,
-  toTTML,
-} from "./serialize";
+export { serializeLyric, toEnhancedLRC, toLRC, toSRT, toTTML } from "./serialize";
 
 // 类型定义
 export type {
@@ -56,6 +50,7 @@ export type {
   LyricWord,
   ParseOptions,
   SerializeLyricFormat,
+  SerializeOptions,
   StripOptions,
   TTMLAgent,
   TTMLPlatformId,
@@ -68,6 +63,7 @@ export { applyKanaToLines, parseKanaUnits } from "./utils/kana";
 export { getWordSweepProgress } from "./utils/sweep";
 export {
   clampLastLineEnd,
+  createActiveLyricFinder,
   findActiveLyricIndices,
   findLyricIndex,
   pickAdvanceOnEndIndex,

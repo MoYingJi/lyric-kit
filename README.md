@@ -26,6 +26,8 @@ npm install lyric-kit
 
 LRC accepts whole-second `[mm:ss]` tags and tags with 1–3 fractional digits, including mixed input, translations, romanizations, and enhanced word tags. KRC clock headers also accept omitted fractions; native integer-millisecond headers keep their existing behavior. SRT accepts whole-second timestamps and skips cues with invalid or reversed times. ASS can be detected from `Dialogue` lines without a complete file header. TTML accepts `h`, `m`, `s`, and `ms` time units.
 
+TTML word timing, ruby, background vocals, and duet behavior follow [applemusic-like-lyrics](https://github.com/Steve-xmh/applemusic-like-lyrics); line ranges include timed words and background vocals. External translations and romanizations prefer the same agent ID and voice, then align within 300ms. Distinct explicit agent IDs do not match each other; auxiliary files without agent IDs can still match by time.
+
 ```ts
 import { parseLyric } from "lyric-kit";
 
@@ -69,6 +71,20 @@ import { serializeLyric } from "lyric-kit";
 const output = serializeLyric(lines, "ttml");
 ```
 
+Existing export defaults remain unchanged. To read exported lyrics back, opt in with `roundTrip: true`:
+
+```ts
+const elrc = serializeLyric(lines, "elrc", { roundTrip: true });
+const srt = toSRT(lines, { roundTrip: true });
+const restored = parseLyric(srt, { multiLineMode: "bilingual" });
+```
+
+The option also works with `toLRC` and `toEnhancedLRC`. LRC uses millisecond precision, preserves background markers on auxiliary lines, and uses `//` as a translation placeholder when only romanization is present. Enhanced LRC additionally emits valid word-end timestamps. SRT uses original/translation/romanization order; read it with `bilingual` mode. Without this option, legacy output and centisecond timestamps stay unchanged.
+
+The third argument of `serializeLyric` uses `SerializeOptions`, with parsing settings under `parse`: `serializeLyric(content, "elrc", { roundTrip: true, parse: { applyOffset: true } })`. Existing flat parsing options remain compatible; use the nested form for new code. Already-parsed lyric arrays and results are not parsed again.
+
+This is not lossless encoding of arbitrary lyric objects: plain LRC has no end times; LRC does not preserve agent IDs, duet flags, or ruby; and SRT does not preserve word timing, background flags, or ruby. Enhanced LRC end markers require valid positive-duration spans. Use TTML when you need richer structure.
+
 ### Clean Metadata Headers
 
 Strip credit headers/footers (lyricist, composer, arranger, copyright notices):
@@ -99,7 +115,12 @@ console.log(lines[0].language); // e.g., "ja"
 ### Playback Synchronization
 
 ```ts
-import { findActiveLyricIndices, findLyricIndex, getWordSweepProgress } from "lyric-kit";
+import {
+  createActiveLyricFinder,
+  findActiveLyricIndices,
+  findLyricIndex,
+  getWordSweepProgress,
+} from "lyric-kit";
 
 // 1. Single-line quick lookup
 const currentMs = 1500;
@@ -107,6 +128,11 @@ const lineIndex = findLyricIndex(lines, currentMs);
 
 // 2. Multi-line overlap lookup (returns all active line indices at currentMs)
 const activeIndices = findActiveLyricIndices(lines, currentMs);
+
+// For per-frame queries or long lyrics, prebuild a snapshot of sorted lines
+const findActive = createActiveLyricFinder(lines);
+const active = findActive(currentMs);
+// Recreate the finder after changing timestamps or line order
 
 if (lineIndex !== -1) {
   const activeLine = lines[lineIndex];
@@ -133,7 +159,7 @@ Parses lyrics and returns a `LyricResult`.
   - `translationFormat?`: Optional translation format override.
   - `romaji?`: Optional romanization string. When word-timed (QRC / KRC / TTML), automatically aligns syllables to `word.romanWord`.
   - `romajiFormat?`: Optional romanization format override.
-  - `kana?`: Optional standalone furigana kana string (used if not embedded via `[kana: ...]`).
+  - `kana?`: Optional standalone furigana kana string (used when no embedded ruby was parsed, avoiding duplicate annotations).
 - **`options`**: `ParseOptions` (optional)
 
 #### `ParseOptions`
@@ -144,7 +170,7 @@ Parses lyrics and returns a `LyricResult`.
 | `detectBackground` | `boolean`               | `true`   | Detect and split parenthesized background/harmony vocals.                                                                                                         |
 | `extractMetadata`  | `boolean`               | `false`  | Extract song metadata (title, artist, album, creators, offset).                                                                                                   |
 | `cleanKangxi`      | `boolean`               | `false`  | Normalize KangXi radicals and CJK compatibility ideographs to standard characters.                                                                                |
-| `applyOffset`      | `boolean`               | `false`  | Automatically apply `metadata.offset` ms to all lines and words (`newTime = originalTime + offset`).                                                              |
+| `applyOffset`      | `boolean`               | `false`  | Apply the input offset to line, word, and ruby timestamps (`newTime = originalTime + offset`, clamped to 0), independently of `extractMetadata`.                  |
 | `keepEmptyLines`   | `boolean`               | `false`  | Keep empty lines (interlude markers). Defaults to `false` (strips empty lines after clamping previous line); `true` preserves them for player interlude handling. |
 | `multiLineMode`    | `"join" \| "bilingual"` | `"join"` | SRT multi-line parsing mode. `join` joins lines with space; `bilingual` maps lines to primary, translation, romanization.                                         |
 | `preferredLang`    | `string`                | `""`     | Preferred translation language code for multi-track TTML (e.g. `"zh-CN"`).                                                                                        |

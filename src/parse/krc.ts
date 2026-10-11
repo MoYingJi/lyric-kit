@@ -88,7 +88,7 @@ export const parseKRC = (text: string, options: ParseOptions = {}): LyricResult 
         } else if (extractMetadata) {
           metadata.language = val;
         }
-      } else if (extractMetadata) {
+      } else if (extractMetadata || (applyOffset && key === "offset")) {
         applyLrcMetaTag(metadata, metaMatch[1], metaMatch[2]);
       }
       continue;
@@ -178,6 +178,6 @@ export const parseKRC = (text: string, options: ParseOptions = {}): LyricResult 
 
   return {
     lines,
-    metadata,
+    metadata: extractMetadata ? metadata : {},
   };
 };
