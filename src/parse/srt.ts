@@ -2,23 +2,24 @@ import { normalizeKangxi } from "../clean/kangxi";
 import { isMeaningfulTranslation } from "../clean/meaningful";
 import type { LyricLine, LyricResult, ParseOptions } from "../types";
 
-/** 匹配 SRT 时间戳 HH:MM:SS,mmm */
-const TIME_RE = /(\d{1,2}):(\d{2}):(\d{2})[,.](\d{1,3})/;
+/** 兼容整秒时间戳，并保留时间后面的字幕坐标扩展 */
+const TIME_RE = /^(\d{1,2}):([0-5]\d):([0-5]\d)(?:[,.](\d{1,3}))?(?=\s|$)/;
 
 /**
  * 解析 SRT 时间戳为毫秒数
  * @param value - SRT 格式时间字符串（如 "01:23:45,678"）
- * @returns 对应毫秒数
+ * @returns 对应毫秒数，格式无效时返回 null
  */
-const parseSrtTime = (value: string): number => {
-  const match = TIME_RE.exec(value);
-  if (!match) return 0;
+const parseSrtTime = (value: string): number | null => {
+  const match = TIME_RE.exec(value.trim());
+  if (!match) return null;
   const hr = parseInt(match[1], 10);
   const min = parseInt(match[2], 10);
   const sec = parseInt(match[3], 10);
-  let ms = parseInt(match[4], 10);
-  if (match[4].length === 1) ms *= 100;
-  else if (match[4].length === 2) ms *= 10;
+  const fraction = match[4] ?? "0";
+  let ms = parseInt(fraction, 10);
+  if (fraction.length === 1) ms *= 100;
+  else if (fraction.length === 2) ms *= 10;
   return ((hr * 60 + min) * 60 + sec) * 1000 + ms;
 };
 
@@ -52,6 +53,7 @@ export const parseSRT = (text: string, options: ParseOptions = {}): LyricResult 
 
     const startTime = parseSrtTime(timeLine.slice(0, arrowIdx));
     const endTime = parseSrtTime(timeLine.slice(arrowIdx + 3));
+    if (startTime === null || endTime === null || endTime < startTime) continue;
 
     const textLines = parts
       .slice(timeLineIdx + 1)

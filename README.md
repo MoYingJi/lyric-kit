@@ -24,6 +24,8 @@ npm install lyric-kit
 
 `parseLyric` accepts raw lyric text or an object payload with optional translations/romanizations.
 
+LRC accepts whole-second `[mm:ss]` tags and tags with 1–3 fractional digits, including mixed input, translations, romanizations, and enhanced word tags. KRC clock headers also accept omitted fractions; native integer-millisecond headers keep their existing behavior. SRT accepts whole-second timestamps and skips cues with invalid or reversed times. ASS can be detected from `Dialogue` lines without a complete file header. TTML accepts `h`, `m`, `s`, and `ms` time units.
+
 ```ts
 import { parseLyric } from "lyric-kit";
 
@@ -97,11 +99,7 @@ console.log(lines[0].language); // e.g., "ja"
 ### Playback Synchronization
 
 ```ts
-import {
-  findActiveLyricIndices,
-  findLyricIndex,
-  getWordSweepProgress,
-} from "lyric-kit";
+import { findActiveLyricIndices, findLyricIndex, getWordSweepProgress } from "lyric-kit";
 
 // 1. Single-line quick lookup
 const currentMs = 1500;
@@ -140,17 +138,17 @@ Parses lyrics and returns a `LyricResult`.
 
 #### `ParseOptions`
 
-| Option | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| `format` | `LyricFormat` | auto | Explicit format override (`lrc`, `ttml`, `qrc`, `krc`, `yrc`, `lys`, `srt`, `ass`). |
-| `detectBackground` | `boolean` | `true` | Detect and split parenthesized background/harmony vocals. |
-| `extractMetadata` | `boolean` | `false` | Extract song metadata (title, artist, album, creators, offset). |
-| `cleanKangxi` | `boolean` | `false` | Normalize KangXi radicals and CJK compatibility ideographs to standard characters. |
-| `applyOffset` | `boolean` | `false` | Automatically apply `metadata.offset` ms to all lines and words (`newTime = originalTime + offset`). |
-| `keepEmptyLines` | `boolean` | `false` | Keep empty lines (interlude markers). Defaults to `false` (strips empty lines after clamping previous line); `true` preserves them for player interlude handling. |
-| `multiLineMode` | `"join" \| "bilingual"` | `"join"` | SRT multi-line parsing mode. `join` joins lines with space; `bilingual` maps lines to primary, translation, romanization. |
-| `preferredLang` | `string` | `""` | Preferred translation language code for multi-track TTML (e.g. `"zh-CN"`). |
-| `domParser` | `DOMParserLike` | auto | Custom DOMParser instance/constructor (required in non-browser/Node.js environments when parsing TTML or QRC XML). |
+| Option             | Type                    | Default  | Description                                                                                                                                                       |
+| :----------------- | :---------------------- | :------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `format`           | `LyricFormat`           | auto     | Explicit format override (`lrc`, `ttml`, `qrc`, `krc`, `yrc`, `lys`, `srt`, `ass`).                                                                               |
+| `detectBackground` | `boolean`               | `true`   | Detect and split parenthesized background/harmony vocals.                                                                                                         |
+| `extractMetadata`  | `boolean`               | `false`  | Extract song metadata (title, artist, album, creators, offset).                                                                                                   |
+| `cleanKangxi`      | `boolean`               | `false`  | Normalize KangXi radicals and CJK compatibility ideographs to standard characters.                                                                                |
+| `applyOffset`      | `boolean`               | `false`  | Automatically apply `metadata.offset` ms to all lines and words (`newTime = originalTime + offset`).                                                              |
+| `keepEmptyLines`   | `boolean`               | `false`  | Keep empty lines (interlude markers). Defaults to `false` (strips empty lines after clamping previous line); `true` preserves them for player interlude handling. |
+| `multiLineMode`    | `"join" \| "bilingual"` | `"join"` | SRT multi-line parsing mode. `join` joins lines with space; `bilingual` maps lines to primary, translation, romanization.                                         |
+| `preferredLang`    | `string`                | `""`     | Preferred translation language code for multi-track TTML (e.g. `"zh-CN"`).                                                                                        |
+| `domParser`        | `DOMParserLike`         | auto     | Custom DOMParser instance/constructor (required in non-browser/Node.js environments when parsing TTML or QRC XML).                                                |
 
 ### Format Parsers & Serializers
 
@@ -200,7 +198,7 @@ interface LyricLine {
   translatedLyric: string;
   romanLyric: string;
   startTime: number; // ms
-  endTime: number;   // ms
+  endTime: number; // ms
   isBG: boolean;
   isDuet: boolean;
   agentId?: string;
@@ -211,7 +209,7 @@ interface LyricLine {
 interface LyricWord {
   word: string;
   startTime: number; // ms
-  endTime: number;   // ms
+  endTime: number; // ms
   romanWord?: string; // Per-word romanization/pinyin syllable (e.g. "kai", "zeoi")
   ruby?: LyricSpan[]; // Furigana/ruby spans (e.g. Japanese kana "かい")
   obscene?: boolean;
@@ -221,7 +219,7 @@ interface LyricWord {
 interface LyricSpan {
   word: string;
   startTime: number; // ms
-  endTime: number;   // ms
+  endTime: number; // ms
 }
 ```
 

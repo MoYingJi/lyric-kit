@@ -41,8 +41,14 @@ const ALIGN_TOLERANCE_MS = 300;
  */
 export const detectFormat = (text: string): LyricFormat => {
   const trimmed = text.trimStart();
-  if (trimmed.startsWith("[Script Info]") || /^\[V4\+? Styles\]/m.test(text)) return "ass";
-  if (/^(?:\d+\r?\n)?\d{1,2}:\d{2}:\d{2}[,.]\d{1,3}\s*-->/.test(trimmed)) return "srt";
+  if (
+    trimmed.startsWith("[Script Info]") ||
+    /^\[V4\+? Styles\]/m.test(text) ||
+    /^Dialogue:\s*\d+,\d+:\d{2}:\d{2}(?:\.\d{1,3})?,/m.test(text)
+  ) {
+    return "ass";
+  }
+  if (/^(?:\d+\r?\n)?\d{1,2}:\d{2}:\d{2}(?:[,.]\d{1,3})?\s*-->/.test(trimmed)) return "srt";
   if (trimmed.startsWith("<?xml") || trimmed.startsWith("<")) {
     if (/LyricContent="|<QrcInfos|<Lyric_/.test(text)) return "qrc";
     if (trimmed.startsWith("<tt") || /<tt\s/i.test(text)) return "ttml";

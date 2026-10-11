@@ -24,6 +24,8 @@ npm install lyric-kit
 
 `parseLyric` 支持传入纯歌词文本字符串，或包含翻译/罗马音的配置对象。
 
+LRC 支持整秒标签 `[mm:ss]` 与 1~3 位小数标签，也可混用；正文、翻译、罗马音及增强 LRC 逐字标签使用相同规则。KRC 的分秒行头同样支持省略小数，原生整数毫秒行头不变。SRT 兼容整秒时间，跳过时间无效或结束早于开始的字幕块。ASS 可根据 `Dialogue` 行自动识别，无需完整文件头。TTML 支持 `h`、`m`、`s`、`ms` 时间单位。
+
 ```ts
 import { parseLyric } from "lyric-kit";
 
@@ -97,11 +99,7 @@ console.log(lines[0].language); // 例如: "ja"
 ### 播放同步与卡拉OK进度
 
 ```ts
-import {
-  findActiveLyricIndices,
-  findLyricIndex,
-  getWordSweepProgress,
-} from "lyric-kit";
+import { findActiveLyricIndices, findLyricIndex, getWordSweepProgress } from "lyric-kit";
 
 // 1. 单行快速查找当前激活行
 const currentMs = 1500;
@@ -140,17 +138,17 @@ if (lineIndex !== -1) {
 
 #### `ParseOptions`
 
-| 参数 | 类型 | 默认值 | 说明 |
-| :--- | :--- | :--- | :--- |
-| `format` | `LyricFormat` | 自动检测 | 手动指定格式（`lrc`、`ttml`、`qrc`、`krc`、`yrc`、`lys`、`srt`、`ass`）。 |
-| `detectBackground` | `boolean` | `true` | 是否识别并分离括号内的和声与伴唱（标记为 `isBG`）。 |
-| `extractMetadata` | `boolean` | `false` | 是否提取歌曲元数据（歌曲名、歌手、专辑、制作人员、偏移量等）。 |
-| `cleanKangxi` | `boolean` | `false` | 是否将康熙部首及 CJK 兼容字符规范化为通用汉字。 |
-| `applyOffset` | `boolean` | `false` | 是否自动将 `metadata.offset` 毫秒数累加至所有行和词的时间戳中（`newTime = originalTime + offset`）。 |
-| `keepEmptyLines` | `boolean` | `false` | 是否保留纯空白文本行（间奏标记）。默认 `false` 过滤空行并截断前行；`true` 时完整保留供播放器处理间奏。 |
-| `multiLineMode` | `"join" \| "bilingual"` | `"join"` | SRT 多行解析模式。`join` 用空格连接多行；`bilingual` 首行为原文，第二行为译文，第三行为音译。 |
-| `preferredLang` | `string` | `""` | 多轨道 TTML 解析时优先匹配的翻译语言代码（如 `"zh-CN"`）。 |
-| `domParser` | `DOMParserLike` | 自动 | 自定义 DOMParser 实例或构造函数（Node.js 等无原生 DOM 环境下解析 TTML / QRC 必填）。 |
+| 参数               | 类型                    | 默认值   | 说明                                                                                                   |
+| :----------------- | :---------------------- | :------- | :----------------------------------------------------------------------------------------------------- |
+| `format`           | `LyricFormat`           | 自动检测 | 手动指定格式（`lrc`、`ttml`、`qrc`、`krc`、`yrc`、`lys`、`srt`、`ass`）。                              |
+| `detectBackground` | `boolean`               | `true`   | 是否识别并分离括号内的和声与伴唱（标记为 `isBG`）。                                                    |
+| `extractMetadata`  | `boolean`               | `false`  | 是否提取歌曲元数据（歌曲名、歌手、专辑、制作人员、偏移量等）。                                         |
+| `cleanKangxi`      | `boolean`               | `false`  | 是否将康熙部首及 CJK 兼容字符规范化为通用汉字。                                                        |
+| `applyOffset`      | `boolean`               | `false`  | 是否自动将 `metadata.offset` 毫秒数累加至所有行和词的时间戳中（`newTime = originalTime + offset`）。   |
+| `keepEmptyLines`   | `boolean`               | `false`  | 是否保留纯空白文本行（间奏标记）。默认 `false` 过滤空行并截断前行；`true` 时完整保留供播放器处理间奏。 |
+| `multiLineMode`    | `"join" \| "bilingual"` | `"join"` | SRT 多行解析模式。`join` 用空格连接多行；`bilingual` 首行为原文，第二行为译文，第三行为音译。          |
+| `preferredLang`    | `string`                | `""`     | 多轨道 TTML 解析时优先匹配的翻译语言代码（如 `"zh-CN"`）。                                             |
+| `domParser`        | `DOMParserLike`         | 自动     | 自定义 DOMParser 实例或构造函数（Node.js 等无原生 DOM 环境下解析 TTML / QRC 必填）。                   |
 
 ### 独立格式解析器与序列化器
 
@@ -200,7 +198,7 @@ interface LyricLine {
   translatedLyric: string;
   romanLyric: string;
   startTime: number; // 毫秒 (ms)
-  endTime: number;   // 毫秒 (ms)
+  endTime: number; // 毫秒 (ms)
   isBG: boolean;
   isDuet: boolean;
   agentId?: string;
@@ -211,7 +209,7 @@ interface LyricLine {
 interface LyricWord {
   word: string;
   startTime: number; // 毫秒 (ms)
-  endTime: number;   // 毫秒 (ms)
+  endTime: number; // 毫秒 (ms)
   romanWord?: string; // 逐字罗马音/拼音音译 (如 "kai", "zeoi")
   ruby?: LyricSpan[]; // 振假名/注音跨度数组 (如日文假名 "かい")
   obscene?: boolean;
@@ -221,7 +219,7 @@ interface LyricWord {
 interface LyricSpan {
   word: string;
   startTime: number; // 毫秒 (ms)
-  endTime: number;   // 毫秒 (ms)
+  endTime: number; // 毫秒 (ms)
 }
 ```
 
