@@ -1,3 +1,4 @@
+import { shouldExcludeAuthor } from "../clean/author";
 import type { LyricLine, LyricMetadata } from "../types";
 
 /** 匹配标准 LRC 元数据标签（如 [ti:xxx]、[ar:xxx]、[offset:xxx]） */
@@ -21,7 +22,7 @@ export const applyLrcMetaTag = (metadata: LyricMetadata, key: string, val: strin
   } else if (lowerKey === "al") {
     metadata.album = [trimmedVal];
   } else if (lowerKey === "by") {
-    metadata.authors = [trimmedVal];
+    if (!shouldExcludeAuthor(trimmedVal)) metadata.authors = [trimmedVal];
   } else if (lowerKey === "offset") {
     const off = parseInt(trimmedVal, 10);
     if (!Number.isNaN(off)) metadata.offset = off;
