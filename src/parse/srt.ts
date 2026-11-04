@@ -1,6 +1,7 @@
 import { normalizeKangxi } from "../clean/kangxi";
 import { isMeaningfulTranslation } from "../clean/meaningful";
 import type { LyricLine, LyricResult, ParseOptions } from "../types";
+import { markLineTimed } from "./timing";
 
 /** 匹配 SRT 时间戳 HH:MM:SS,mmm */
 const TIME_RE = /(\d{1,2}):(\d{2}):(\d{2})[,.](\d{1,3})/;
@@ -72,15 +73,17 @@ export const parseSRT = (text: string, options: ParseOptions = {}): LyricResult 
       mainText = textLines.join(" ");
     }
 
-    lines.push({
-      words: [{ startTime, endTime, word: mainText }],
-      translatedLyric,
-      romanLyric,
-      startTime,
-      endTime,
-      isBG: false,
-      isDuet: false,
-    });
+    lines.push(
+      markLineTimed({
+        words: [{ startTime, endTime, word: mainText }],
+        translatedLyric,
+        romanLyric,
+        startTime,
+        endTime,
+        isBG: false,
+        isDuet: false,
+      }),
+    );
   }
 
   return {

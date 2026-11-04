@@ -7,6 +7,7 @@ import { LAST_LINE_FALLBACK_MS } from "../utils/sync";
 import { getLineText } from "../utils/text";
 import { ANGLE_TIME_RE, BRACKET_TIME_RE, parseTime } from "../utils/timestamp";
 import { pushCleanWord } from "../utils/word";
+import { isLineTimed, markLineTimed } from "./timing";
 
 /** 检测尖括号逐字标签 */
 const HAS_ANGLE_TAGS = /<\d+:\d+/;
@@ -107,15 +108,17 @@ const parseLrcPayload = (line: string, detectBackground: boolean): LyricLine[] =
   if (!content.trim()) {
     const lines: LyricLine[] = [];
     for (const time of times) {
-      lines.push({
-        words: [{ startTime: time, endTime: 0, word: "" }],
-        translatedLyric: "",
-        romanLyric: "",
-        startTime: time,
-        endTime: 0,
-        isBG: false,
-        isDuet: false,
-      });
+      lines.push(
+        markLineTimed({
+          words: [{ startTime: time, endTime: 0, word: "" }],
+          translatedLyric: "",
+          romanLyric: "",
+          startTime: time,
+          endTime: 0,
+          isBG: false,
+          isDuet: false,
+        }),
+      );
     }
     return lines;
   }
@@ -178,15 +181,17 @@ const parseLrcPayload = (line: string, detectBackground: boolean): LyricLine[] =
   const isBG = detectBackgroundLine(lineWords, detectBackground);
   const lines: LyricLine[] = [];
   for (const time of times) {
-    lines.push({
-      words: [{ startTime: time, endTime: 0, word: lineWords[0].word }],
-      translatedLyric: "",
-      romanLyric: "",
-      startTime: time,
-      endTime: 0,
-      isBG,
-      isDuet: false,
-    });
+    lines.push(
+      markLineTimed({
+        words: [{ startTime: time, endTime: 0, word: lineWords[0].word }],
+        translatedLyric: "",
+        romanLyric: "",
+        startTime: time,
+        endTime: 0,
+        isBG,
+        isDuet: false,
+      }),
+    );
   }
   return lines;
 };
@@ -240,7 +245,7 @@ export const parseLRC = (text: string, options: ParseOptions = {}): LyricResult 
       lines.push(item);
       if (!item.isBG) {
         const bg = splitTrailingBackground(item, detectBackground);
-        if (bg) lines.push(bg);
+        if (bg) lines.push(isLineTimed(item) ? markLineTimed(bg) : bg);
       }
     }
   }

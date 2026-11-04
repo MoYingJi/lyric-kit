@@ -1,13 +1,6 @@
 import { normalizeKangxi } from "../clean/kangxi";
 import { isMeaningfulTranslation } from "../clean/meaningful";
-import type {
-  LyricFormat,
-  LyricInput,
-  LyricLine,
-  LyricResult,
-  LyricWord,
-  ParseOptions,
-} from "../types";
+import type { LyricFormat, LyricInput, LyricLine, LyricResult, ParseOptions } from "../types";
 import { applyKanaToLines } from "../utils/kana";
 import { alignRomanization } from "../utils/roman";
 import { parseASS } from "./ass";
@@ -16,6 +9,7 @@ import { parseLRC } from "./lrc";
 import { parseLyS } from "./lys";
 import { parseQRC } from "./qrc";
 import { parseSRT } from "./srt";
+import { isLineTimed } from "./timing";
 import { parseTTML } from "./ttml";
 import { parseYRC } from "./yrc";
 
@@ -98,12 +92,15 @@ const lineText = (line: LyricLine): string =>
     .trim();
 
 /**
- * 判断单词数组是否包含逐字时间戳信息
- * @param words - 歌词单词数组
+ * 判断歌词行是否具备可用于逐字音译对齐的时间信息
+ * @param line - 歌词行对象
  * @returns 是否具备逐字时间信息
  */
-const hasWordTiming = (words: LyricWord[]): boolean =>
-  words.length > 1 || (words.length === 1 && words[0].endTime > words[0].startTime);
+const hasWordTiming = (line: LyricLine): boolean => {
+  if (isLineTimed(line)) return false;
+  const { words } = line;
+  return words.length > 1 || (words.length === 1 && words[0].endTime > words[0].startTime);
+};
 
 /**
  * 将翻译/音译歌词按时间戳对齐到主歌词行
@@ -125,7 +122,7 @@ export const pairTranslation = (
     assignedTrans.add(trans);
     const text = lineText(trans);
     if (isMeaningfulTranslation(text)) main[field] = text;
-    if (field === "romanLyric" && hasWordTiming(main.words) && hasWordTiming(trans.words)) {
+    if (field === "romanLyric" && hasWordTiming(main) && hasWordTiming(trans)) {
       alignRomanization(main.words, trans.words);
     }
   };
