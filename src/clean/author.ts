@@ -6,8 +6,11 @@ const TAG_BASED_FORMATS = new Set<LyricFormat>(["lrc", "qrc", "krc", "yrc", "lys
 
 /**
  * 判断是否应排除该制作者
+ * @param author - 制作者名称或账号
+ * @param extraKeywords - 可选的追加排除关键词列表
+ * @returns 命中排除规则时返回 true
  */
-const shouldExcludeAuthor = (author: string, extraKeywords?: readonly string[]): boolean => {
+export const shouldExcludeAuthor = (author: string, extraKeywords?: readonly string[]): boolean => {
   const lower = author.toLowerCase();
   const keywords = extraKeywords ? [...defaultAuthors, ...extraKeywords] : defaultAuthors;
   return keywords.some((kw) => lower.includes(kw.toLowerCase()));
