@@ -1,6 +1,7 @@
 import { normalizeKangxi } from "../clean/kangxi";
 import { isMeaningfulTranslation } from "../clean/meaningful";
 import type { LyricLine, LyricMetadata, LyricResult, LyricWord, ParseOptions } from "../types";
+import { markLineTimed } from "./timing";
 
 /** 匹配 Dialogue 行时间戳、Style 与 Name（Speaker）字段 */
 const DIALOGUE_RE =
@@ -170,7 +171,7 @@ export const parseASS = (text: string, options: ParseOptions = {}): LyricResult 
     const isDuet = track.includes("v2");
     const isBG = track.includes("bg");
 
-    lines.push({
+    const line: LyricLine = {
       words,
       translatedLyric,
       romanLyric,
@@ -178,7 +179,8 @@ export const parseASS = (text: string, options: ParseOptions = {}): LyricResult 
       endTime: source.endTime,
       isBG,
       isDuet,
-    });
+    };
+    lines.push(karaokeWords ? line : markLineTimed(line));
   }
 
   lines.sort((lineA, lineB) => lineA.startTime - lineB.startTime);

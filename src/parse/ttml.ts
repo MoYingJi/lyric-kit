@@ -14,6 +14,7 @@ import type {
 import { pickLangIndex } from "../utils/pickLanguage";
 import { alignRomanization } from "../utils/roman";
 import { parseTTMLTime } from "../utils/timestamp";
+import { markLineTimed } from "./timing";
 
 export type { DOMParserConstructor, DOMParserLike };
 export { alignRomanization };
@@ -675,7 +676,8 @@ export const parseTTML = (text: string, options: ParseOptions = {}): LyricResult
 
           // 若背景音无逐字 span，回退为单词行
           const cleanBgText = stripParens(bgState.fullText);
-          if (bgState.words.length === 0 && cleanBgText) {
+          const isLineTimedBg = bgState.words.length === 0;
+          if (isLineTimedBg && cleanBgText) {
             bgState.words.push({
               word: cleanBgText,
               startTime: bgStart,
@@ -716,13 +718,13 @@ export const parseTTML = (text: string, options: ParseOptions = {}): LyricResult
             roman = bgState.romanizations[0].text;
           }
 
-          if (selectedBgRomanWords && bgState.words.length > 0) {
+          if (selectedBgRomanWords && !isLineTimedBg) {
             alignRomanization(bgState.words, selectedBgRomanWords);
           }
 
           const bgAgent = getAttr(el, NS.TTM, Elements.Agent, "ttm:agent");
 
-          state.bgLines.push({
+          const bgLine: LyricLine = {
             words: bgState.words,
             translatedLyric: isMeaningfulTranslation(trans) ? trans : "",
             romanLyric: roman,
@@ -731,7 +733,8 @@ export const parseTTML = (text: string, options: ParseOptions = {}): LyricResult
             isBG: true,
             isDuet: false,
             agentId: bgAgent || undefined,
-          });
+          };
+          state.bgLines.push(isLineTimedBg ? markLineTimed(bgLine) : bgLine);
         } else if (role === Values.RoleTranslation) {
           const lang = getAttr(el, NS.XML, Attributes.Lang, "xml:lang");
           const transText = normalizeText(el.textContent);
@@ -895,7 +898,8 @@ export const parseTTML = (text: string, options: ParseOptions = {}): LyricResult
     const isDuet = determineDuet(lineAgent || undefined);
 
     // 回退单字行
-    if (state.words.length === 0 && state.fullText.trim().length > 0) {
+    const isLineTimedMain = state.words.length === 0;
+    if (isLineTimedMain && state.fullText.trim().length > 0) {
       state.words.push({
         word: state.fullText.trim(),
         startTime,
@@ -917,7 +921,7 @@ export const parseTTML = (text: string, options: ParseOptions = {}): LyricResult
       blockIndex: blockIdx,
     };
 
-    resultLines.push(mainLine);
+    resultLines.push(isLineTimedMain ? markLineTimed(mainLine) : mainLine);
     if (state.bgLines.length > 0) {
       for (const bg of state.bgLines) {
         bg.isDuet = isDuet;

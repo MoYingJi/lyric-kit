@@ -90,6 +90,58 @@ describe("逐字罗马音/拼音对齐 (alignRomanization)", () => {
 });
 
 describe("多轨逐字歌词解析集成 (parseLyric with romaji)", () => {
+  it.each([
+    ["はいっ 1 2 3 4 ぷーん はぁ ちーん", "ha i tsu i chi ni sa n yo n puu n ha a chii n"],
+    ["우리가 만든 LOVE SCENARIO", "u ri ga man deun LOVE SCENARIO"],
+    ["界", "kai"],
+  ])("普通 LRC 只保留行级音译（%s）", (main, roman) => {
+    const { lines } = parseLyric({
+      content: `[00:01.000]${main}`,
+      romaji: `[00:01.000]${roman}`,
+    });
+
+    expect(lines[0].romanLyric).toBe(roman);
+    expect(lines[0].words[0].romanWord).toBeUndefined();
+  });
+
+  it("按行区分混合 LRC，两轨都有逐词标签时才挂载音译", () => {
+    const { lines } = parseLyric({
+      content: [
+        "[00:01.000]<00:01.000>界<00:02.000>",
+        "[00:02.000]界",
+        "[00:03.000]<00:03.000>界<00:04.000>",
+      ].join("\n"),
+      romaji: [
+        "[00:01.000]<00:01.000>ka <00:01.500>i<00:02.000>",
+        "[00:02.000]<00:02.000>kai<00:03.000>",
+        "[00:03.000]kai",
+      ].join("\n"),
+    });
+
+    expect(lines.map((line) => line.romanLyric)).toEqual(["ka i", "kai", "kai"]);
+    expect(lines.map((line) => line.words[0].romanWord)).toEqual(["kai", undefined, undefined]);
+  });
+
+  it("普通 LRC 拆出的背景行也只保留行级音译", () => {
+    const { lines } = parseLyric({
+      content: "[00:01.000]主词 (和声)",
+      romaji: "[00:01.000]zhu ci (he sheng)",
+    });
+
+    expect(lines.map((line) => line.romanLyric)).toEqual(["zhu ci", "he sheng"]);
+    expect(lines.every((line) => line.words[0].romanWord === undefined)).toBe(true);
+  });
+
+  it("SRT 字幕的起止时间只用于行级音译", () => {
+    const { lines } = parseLyric({
+      content: "1\n00:00:01,000 --> 00:00:02,000\n界",
+      romaji: "[00:01.000]<00:01.000>kai<00:02.000>",
+    });
+
+    expect(lines[0].romanLyric).toBe("kai");
+    expect(lines[0].words[0].romanWord).toBeUndefined();
+  });
+
   it("应在传入包含逐字 romaji 的 QRC 载荷时，自动挂载 romanLyric 与 words.romanWord", () => {
     const qrcMain = [
       '<?xml version="1.0" encoding="utf-8"?>',
