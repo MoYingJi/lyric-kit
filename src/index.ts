@@ -58,8 +58,11 @@ export type {
 
 // 播放同步与行处理
 export { detectBackgroundLine, splitTrailingBackground } from "./utils/bg";
+export type { CompareLyricsOptions, LyricComparison } from "./utils/compare";
+export { compareLyrics, hasWordTiming } from "./utils/compare";
 export type { KanaUnit } from "./utils/kana";
 export { applyKanaToLines, parseKanaUnits } from "./utils/kana";
+export { applyTimestampOffset } from "./utils/meta";
 export { getWordSweepProgress } from "./utils/sweep";
 export {
   clampLastLineEnd,

@@ -100,6 +100,24 @@ const cleanedLines = stripLyricMetadata(lines, {
 });
 ```
 
+### Compare Lyric Versions
+
+Check whether a candidate is the same version as a baseline and estimate its time offset. Punctuation, metadata, filler words, background vocals, and translations are ignored. Convert between Simplified and Traditional Chinese before calling:
+
+```ts
+import { applyTimestampOffset, compareLyrics, hasWordTiming } from "lyric-kit";
+
+const { verdict, offsetMs } = compareLyrics(officialLines, candidateLines, {
+  matchMetadata: { title: "Song Title", artists: ["Artist Name"] },
+});
+
+// same | shifted (same version, needs shifting) | different | unknown (cannot tell)
+if (verdict === "shifted") applyTimestampOffset(candidateLines, -offsetMs);
+
+// Whether the lyric has real word-level timing
+hasWordTiming(candidateLines);
+```
+
 ### Infer Lyric Language
 
 Automatically infers and assigns language codes (`ja` / `ko` / `zh-CN` / `und-Latn`) using kana furigana (ruby), full-song translation cues, and CJK script density ratios. This helps UI layers select localized CJK glyphs or wire up TTS / pronunciation tools:

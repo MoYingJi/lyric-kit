@@ -100,6 +100,24 @@ const cleanedLines = stripLyricMetadata(lines, {
 });
 ```
 
+### 比较歌词版本
+
+以一份歌词为基准，判断候选歌词是否为同一版本，并估算时间偏移。比较时忽略标点、元数据、语气词、背景人声和翻译；简繁转换需在调用前完成：
+
+```ts
+import { applyTimestampOffset, compareLyrics, hasWordTiming } from "lyric-kit";
+
+const { verdict, offsetMs } = compareLyrics(officialLines, candidateLines, {
+  matchMetadata: { title: "歌曲名", artists: ["歌手名"] },
+});
+
+// same：同版本；shifted：同版本但需平移；different：不同版本；unknown：无法判断
+if (verdict === "shifted") applyTimestampOffset(candidateLines, -offsetMs);
+
+// 是否有真实的逐字时间
+hasWordTiming(candidateLines);
+```
+
 ### 智能推断歌词语言
 
 自动结合假名振假名注音（ruby）、全曲翻译与 CJK 字符比例，为歌词行推断并注入语言代码（`ja` / `ko` / `zh-CN` / `und-Latn`），便于界面选择字形（CJK 异体字）或对接 TTS / 音译：
