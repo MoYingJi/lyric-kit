@@ -123,10 +123,44 @@ describe("pickAdvanceOnEndIndex / pickPrimaryIndex", () => {
     expect(pickAdvanceOnEndIndex(lines, 500)).toBe(-1);
   });
 
-  it("pickPrimaryIndex 首行前序应显示首行，行间空隙应推进", () => {
-    expect(pickPrimaryIndex(lines, 500)).toBe(0);
+  it("pickPrimaryIndex 首行开始前应返回 -1，行间空隙应推进", () => {
+    expect(pickPrimaryIndex(lines, 500)).toBe(-1);
     expect(pickPrimaryIndex(lines, 1500)).toBe(0);
     expect(pickPrimaryIndex(lines, 4200)).toBe(2);
+  });
+
+  it("pickPrimaryIndex 上一行未唱完时应保留在主行", () => {
+    expect(pickPrimaryIndex(lines, 2800)).toBe(0);
+    expect(pickPrimaryIndex(lines, 3500)).toBe(1);
+  });
+
+  it("pickPrimaryIndex 新行提前结束时应保留未唱完的上一行", () => {
+    const nestedLines = makeLines([
+      [1000, 5000, "一"],
+      [2000, 3000, "二"],
+    ]);
+    expect(pickPrimaryIndex(nestedLines, 4000)).toBe(0);
+  });
+
+  it("pickPrimaryIndex 判断重叠时应跳过背景行", () => {
+    const backgroundLines = makeLines([
+      [1000, 3000, "一"],
+      [1200, 2800, "和声"],
+      [2500, 4000, "二"],
+    ]);
+    backgroundLines[1].isBG = true;
+    expect(pickPrimaryIndex(backgroundLines, 2600)).toBe(0);
+    expect(pickPrimaryIndex(backgroundLines, 2900)).toBe(0);
+    expect(pickPrimaryIndex(backgroundLines, 3500)).toBe(2);
+  });
+
+  it("pickPrimaryIndex 背景行命中时应回到同时间段的主歌词行", () => {
+    const backgroundLines = makeLines([
+      [1000, 3000, "一"],
+      [1200, 2800, "和声"],
+    ]);
+    backgroundLines[1].isBG = true;
+    expect(pickPrimaryIndex(backgroundLines, 2000)).toBe(0);
   });
 });
 

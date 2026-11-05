@@ -137,18 +137,13 @@ export const pickAdvanceOnEndIndex = (lines: LyricLine[], time: number): number 
 };
 
 /**
- * 主歌词行索引选择（考虑重叠行、行结束提前滚动、首行前序等待）
- * 适合桌面歌词等单行展示场景
+ * 主歌词行索引选择（保留未唱完的重叠行、行结束提前滚动）
+ * 适合桌面歌词等双行展示场景，主行之后的一行作为副行与其同时播放
  * @param lines - 歌词行数组
  * @param time - 当前播放毫秒数
- * @returns 匹配的行索引，无匹配返回 -1
+ * @returns 匹配的行索引，首行开始前或无匹配返回 -1
  */
 export const pickPrimaryIndex = (lines: LyricLine[], time: number): number => {
-  if (lines.length === 0) return -1;
-
-  // 处于首行之前：显示首行
-  if (time < lines[0].startTime) return 0;
-
   const activeIndex = pickLatestStartedIndex(lines, time);
   if (activeIndex === -1) return -1;
 
@@ -164,6 +159,11 @@ export const pickPrimaryIndex = (lines: LyricLine[], time: number): number => {
       }
     }
   }
+
+  // 上一主歌词行未唱完时保留为主行，让重叠的新行同时显示
+  let previousIndex = activeIndex - 1;
+  while (previousIndex >= 0 && lines[previousIndex].isBG) previousIndex--;
+  if (previousIndex >= 0 && time < lines[previousIndex].endTime) return previousIndex;
 
   // 跨行空隙期：当前行唱完（time >= current.endTime）且存在下一行时，推进展示下一行
   const current = lines[activeIndex];
